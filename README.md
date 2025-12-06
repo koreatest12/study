@@ -3,17 +3,17 @@
 ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
 ![Security Audit](https://img.shields.io/badge/Security-Public-red?style=for-the-badge)
 ![Last Update](https://img.shields.io/badge/Updated-2025--12--06-lightgrey?style=for-the-badge)
-![Level](https://img.shields.io/badge/Level-Lv.1_Beginner-yellow?style=for-the-badge)
+![Level](https://img.shields.io/badge/Level-Lv.2_Script_Kiddie-orange?style=for-the-badge)
 
 > 💡 **Today's Security Term:**
-> **Social Engineering: 기술이 아닌 사람의 심리를 이용해 정보를 탈취하는 기법.**
+> **Zero Trust: 아무도 신뢰하지 않고 항상 검증하라.**
 
 ---
 
 ## 📂 학습 현황 (Study Dashboard)
 
 **Current Level Progress:**
-`▓░░░░░░░░░` (Total Reports: **1**)
+`▓▓▓░░░░░░░` (Total Reports: **6**)
 
 
 ### 📚 학습 커리큘럼 (상세 보기)
@@ -63,6 +63,11 @@
 ## 📑 학습 리포트 목록 (Reports)
 | 날짜 | 리포트 제목 | 상태 |
 |:---:|:---|:---:|
+| 2025-12-06 | [2025-12-06_CC_인증(Common_Criteria).md](reports/2025-12-06_CC_인증(Common_Criteria).md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_GDPR_주요_내용.md](reports/2025-12-06_GDPR_주요_내용.md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_랜섬웨어_동작_원리_및_대응.md](reports/2025-12-06_랜섬웨어_동작_원리_및_대응.md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_세마포어_심층분석.md](reports/2025-12-06_세마포어_심층분석.md) | ✅ Verified |
+| 2025-12-06 | [OS_Architecture_Report_2025-12-06.md](reports/OS_Architecture_Report_2025-12-06.md) | ✅ Verified |
 | 2025-12-06 | [Security_Exam_Report_2025-12-06.md](reports/Security_Exam_Report_2025-12-06.md) | ✅ Verified |
 
 ---
