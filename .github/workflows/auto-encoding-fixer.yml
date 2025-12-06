@@ -1,25 +1,21 @@
-name: Auto Encoding Fixer (UTF-8 & NFC)
+name: Auto Encoding Fixer (Always Run)
 
 on:
-  # 1. 파일이 푸시될 때마다 즉시 검사
   push:
     paths:
       - '**/*.md'
       - '**/*.txt'
-  # 2. 매일 자정, 정오에 정기 점검 (안전장치)
   schedule:
-    - cron: '0 0,12 * * *'
-  # 3. 수동 실행 가능
+    - cron: '0 0,12 * * *' # 매일 2회 정기 점검
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  fix-encoding:
+  fix-encoding-always:
     runs-on: ubuntu-latest
     env:
-      # 리눅스 로케일 설정 (한글 처리 필수)
       LANG: ko_KR.UTF-8
       LC_ALL: ko_KR.UTF-8
 
@@ -39,70 +35,65 @@ jobs:
           import glob
           import unicodedata
 
-          # 검사할 대상 디렉토리 설정
           TARGET_DIRS = ['reports', '.'] 
-          FIXED_FILES = []
-
           print("🔍 Starting Encoding & Normalization Check...")
 
           for directory in TARGET_DIRS:
               if not os.path.exists(directory):
                   continue
                   
-              # 하위의 모든 md, txt 파일 탐색
               files = glob.glob(f'{directory}/**/*.md', recursive=True) + \
                       glob.glob(f'{directory}/**/*.txt', recursive=True)
 
               for filepath in files:
                   dirname, filename = os.path.split(filepath)
                   
-                  # 1. [파일명] 자소 분리(NFD) 해결 -> NFC로 정규화
-                  # Mac에서 올린 한글 파일명이 리눅스/윈도우에서 깨지는 현상 방지
+                  # 1. 파일명 자소 분리(NFD) -> 정규화(NFC)
                   nfc_filename = unicodedata.normalize('NFC', filename)
                   
                   if filename != nfc_filename:
                       new_path = os.path.join(dirname, nfc_filename)
                       os.rename(filepath, new_path)
-                      filepath = new_path # 경로 업데이트
                       print(f"✅ Filename Normalized: {filename} -> {nfc_filename}")
-                      FIXED_FILES.append(nfc_filename)
 
-                  # 2. [파일 내용] 인코딩 감지 및 변환 (EUC-KR/CP949 -> UTF-8)
+                  # 2. 파일 내용 인코딩 변환 (CP949 -> UTF-8)
                   try:
-                      # 먼저 UTF-8로 읽기 시도
                       with open(filepath, 'r', encoding='utf-8') as f:
                           f.read()
                   except UnicodeDecodeError:
-                      # UTF-8 실패 시, 한국어 레거시 인코딩(CP949)으로 시도
                       try:
-                          print(f"⚠️ Non-UTF-8 detected: {filepath}. Converting...")
+                          print(f"⚠️ Non-UTF-8 detected: {filepath}")
                           with open(filepath, 'r', encoding='cp949') as f:
                               content = f.read()
-                          # UTF-8로 다시 저장
                           with open(filepath, 'w', encoding='utf-8') as f:
                               f.write(content)
-                          print(f"✅ Converted content to UTF-8: {filepath}")
-                          FIXED_FILES.append(filepath)
+                          print(f"✅ Converted to UTF-8: {filepath}")
                       except Exception as e:
-                          print(f"❌ Failed to convert {filepath}: {e}")
+                          print(f"❌ Error converting {filepath}: {e}")
 
-          # 결과 요약
-          if FIXED_FILES:
-              print(f"🎉 Total {len(FIXED_FILES)} files fixed.")
-              # 다음 스텝에서 커밋 여부를 결정하기 위해 환경변수 설정
-              with open(os.environ['GITHUB_ENV'], 'a') as f:
-                  f.write("HAS_FIXES=true\n")
-          else:
-              print("✨ All files are already clean (UTF-8 & NFC).")
-              with open(os.environ['GITHUB_ENV'], 'a') as f:
-                  f.write("HAS_FIXES=false\n")
+          print("✨ Encoding check completed.")
 
-      - name: Commit and Push Changes
-        if: env.HAS_FIXES == 'true'
+      # ⚡ [수정됨] 조건문(if)을 제거하여 무조건 실행되도록 변경
+      - name: Commit and Push Changes (Always Execute)
         run: |
+          # 1. Git 사용자 설정
           git config --global user.name "encoding-guard-bot"
           git config --global user.email "guard@noreply.github.com"
           
+          # 2. 모든 변경사항 스테이징
           git add .
-          git commit -m "🚑 Auto-fix: Normalize filenames and convert to UTF-8"
-          git push
+          
+          # 3. 변경사항 유무 확인 및 처리 (에러 방지 로직)
+          echo "🔍 Checking for changes to commit..."
+          
+          if git diff --staged --quiet; then
+            # 변경사항이 없을 경우
+            echo "✅ No changes detected. (Clean)"
+            echo "Skip pushing to avoid empty commit error."
+          else
+            # 변경사항이 있을 경우
+            echo "🚀 Changes detected! Committing and Pushing..."
+            git commit -m "🚑 Auto-fix: Normalize filenames and convert to UTF-8"
+            git push
+            echo "🎉 Successfully pushed changes."
+          fi
