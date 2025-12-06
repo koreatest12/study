@@ -1,9 +1,9 @@
-name: Daily Auto Study Generator
+name: Daily Auto Study Generator (Fixed & Expanded)
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 매일 자정 (UTC 기준 00:00, 한국 시간 오전 9:00) 실행
-  workflow_dispatch: # 수동 실행 가능
+    - cron: '0 0 * * *' # 매일 자정 (한국 시간 오전 9시)
+  workflow_dispatch: # 수동 실행
 
 permissions:
   contents: write
@@ -11,100 +11,154 @@ permissions:
 jobs:
   generate-daily-report:
     runs-on: ubuntu-latest
-    
+    # 🌍 [중요] 한국 시간 및 언어셋 강제 설정 (에러 해결 핵심)
+    env:
+      TZ: 'Asia/Seoul'
+      LANG: 'ko_KR.UTF-8'
+      LC_ALL: 'ko_KR.UTF-8'
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Date
-        shell: bash
-        run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Create Reports Directory
-        run: mkdir -p reports
+      - name: Setup Environment & Directory
+        run: |
+          # 현재 날짜 (KST 기준)
+          echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          mkdir -p reports
 
       - name: Generate Study Content
         shell: bash
         run: |
-          # 1. 학습 주제 데이터베이스 (기존 워크플로우의 커리큘럼 기반)
-          # 배열 인덱스: 0=시스템, 1=네트워크, 2=어플리케이션, 3=일반, 4=관리/법규
+          # ==========================================================
+          # 📚 정보보안기사 학습 데이터베이스 (Massive Update)
+          # ==========================================================
           
           SUBJECTS=("시스템 보안" "네트워크 보안" "어플리케이션 보안" "정보보안 일반" "관리 및 법규")
           
-          # 각 주제별 세부 토픽 리스트
-          TOPICS_0=("운영체제 구조 및 커널" "프로세스 스케줄링 알고리즘" "교착상태(Deadlock) 해결법" "Unix 파일 시스템(Inode)" "Windows 인증 구조(LSA/SAM)" "악성코드 분석 기초" "로그 분석(Syslog/EventLog)")
-          TOPICS_1=("OSI 7계층과 TCP/IP" "TCP 3-way Handshake" "DoS 및 DDoS 공격 기법" "패킷 스니핑과 스푸핑" "IPSec VPN 동작 원리" "침입탐지시스템(IDS) vs IPS" "무선 LAN 보안(WPA2/WPA3)")
-          TOPICS_2=("OWASP Top 10 취약점" "SQL Injection 공격 및 방어" "XSS(Cross Site Scripting)" "CSRF 공격 원리" "파일 업로드 취약점" "데이터베이스 암호화 기술" "SSL/TLS 핸드셰이크 과정")
-          TOPICS_3=("보안의 3요소(CIA)" "대칭키 vs 공개키 암호화" "해시 함수와 무결성" "전자서명과 PKI 구조" "접근통제 모델(MAC/DAC/RBAC)" "사용자 인증 기술(Biometrics/OTP)")
-          TOPICS_4=("ISMS-P 인증 기준" "위험 관리(Risk Management)" "업무연속성계획(BCP/DRP)" "개인정보보호법 주요 내용" "정보통신망법 이해" "침해사고 대응 절차")
+          # 1. 시스템 보안
+          TOPICS_0=(
+            "운영체제 커널과 쉘의 차이" "프로세스 스케줄링(RR, SRT, MLQ)" "교착상태(Deadlock) 4대 조건" 
+            "메모리 관리 기법(Paging vs Segmentation)" "가상 메모리와 페이지 교체 알고리즘" 
+            "Unix 파일 시스템(Inode, SuperBlock)" "SetUID와 SetGID 보안 취약점" 
+            "Windows 레지스트리 분석" "시스템 로그 분석(wtmp, utmp, btmp)" "랜섬웨어 동작 원리 및 대응"
+            "레이스 컨디션(Race Condition) 공격" "버퍼 오버플로우(Stack, Heap) 기초"
+          )
+          
+          # 2. 네트워크 보안
+          TOPICS_1=(
+            "OSI 7계층 모델 상세 분석" "TCP 3-way 및 4-way Handshake" "ARP Spoofing 공격 원리" 
+            "DoS(Syn Flooding)와 DDoS 차이" "DRDoS(반사 공격) 원리" "IPSec VPN(AH, ESP, IKE)" 
+            "SSL TLS 핸드셰이크 상세 과정" "방화벽(Firewall) 유형 및 한계" 
+            "IDS(탐지)와 IPS(차단)의 차이" "무선 보안(WPA2 vs WPA3)" "DNS Spoofing과 Pharming"
+            "허니팟(Honeypot) 구축 및 활용"
+          )
+          
+          # 3. 어플리케이션 보안
+          TOPICS_2=(
+            "OWASP Top 10 최신 트렌드" "SQL Injection(Error, Blind, Union)" "XSS(Reflected, Stored, DOM)" 
+            "CSRF 공격과 토큰 방어" "SSRF(Server Side Request Forgery)" "파일 업로드 취약점 및 WebShell" 
+            "디렉토리 트래버설(Path Traversal)" "데이터베이스 암호화 방식(API, Plug-in)" 
+            "전자상거래 보안(SET, SSL)" "웹 방화벽(WAF)의 역할"
+          )
+          
+          # 4. 정보보안 일반
+          TOPICS_3=(
+            "보안의 3요소(CIA)와 AAA" "대칭키 암호화(AES, DES, SEED)" "공개키 암호화(RSA, ECC)" 
+            "해시 함수(SHA-256)와 무결성 검증" "전자서명(Digital Signature) 원리" "PKI(공개키 기반 구조) 구성요소" 
+            "접근통제 모델(MAC, DAC, RBAC)" "사용자 인증(Biometrics, OTP, Kerberos)" 
+            "스테가노그래피(Steganography)" "블록체인과 보안"
+          )
+          
+          # 5. 관리 및 법규
+          TOPICS_4=(
+            "ISMS-P 인증 심사 기준" "위험 관리(Risk Management) 방법론" "BCP(업무연속성)와 DRP(재해복구)" 
+            "개인정보보호법 주요 벌칙 규정" "정보통신망법과 정보통신기반보호법" "CC 인증(Common Criteria)" 
+            "침해사고 대응 7단계 절차" "디지털 포렌식 증거 수집 원칙" "GDPR 주요 내용"
+          )
 
-          # 2. 랜덤 주제 선정
-          RANDOM_SUB_IDX=$((RANDOM % 5))
-          SELECTED_SUBJECT="${SUBJECTS[$RANDOM_SUB_IDX]}"
+          # ==========================================================
+          # 🎲 랜덤 주제 및 토픽 선정 로직
+          # ==========================================================
           
-          # 선택된 주제에 맞는 토픽 배열 선택 (간접 참조)
-          eval "TARGET_TOPICS=(\"\${TOPICS_${RANDOM_SUB_IDX}[@]}\")"
-          RANDOM_TOPIC_IDX=$((RANDOM % ${#TARGET_TOPICS[@]}))
-          SELECTED_TOPIC="${TARGET_TOPICS[$RANDOM_TOPIC_IDX]}"
+          # 1. 주제 랜덤 선택 (0~4)
+          RAND_SUB=$((RANDOM % 5))
+          SELECTED_SUBJECT="${SUBJECTS[$RAND_SUB]}"
           
-          # 파일명 생성 (공백을 언더바_로 치환)
-          SAFE_TOPIC_NAME=$(echo "$SELECTED_TOPIC" | sed 's/ /_/g' | sed 's/[^a-zA-Z0-9가-힣_.-]//g')
+          # 2. 해당 주제의 토픽 배열 가져오기 (간접 참조)
+          eval "TARGET_ARR=(\"\${TOPICS_${RAND_SUB}[@]}\")"
+          
+          # 3. 토픽 랜덤 선택
+          RAND_TOPIC=$((RANDOM % ${#TARGET_ARR[@]}))
+          SELECTED_TOPIC="${TARGET_ARR[$RAND_TOPIC]}"
+          
+          # ==========================================================
+          # 🛠️ [에러 해결] 안전한 파일명 생성 로직 (sed 제거)
+          # ==========================================================
+          
+          # 공백만 언더바(_)로 변경. 한글은 그대로 유지 (Linux 파일시스템은 한글 지원함)
+          # sed의 범위 지정 에러를 피하기 위해 단순 치환만 수행
+          SAFE_TOPIC_NAME="${SELECTED_TOPIC// /_}"
+          
+          # 파일명 최종 조합 (날짜_토픽.md)
           FILE_NAME="reports/${TODAY}_${SAFE_TOPIC_NAME}.md"
           
-          echo "🎯 오늘의 학습 목표: [$SELECTED_SUBJECT] $SELECTED_TOPIC"
+          echo "🎯 Selected: [$SELECTED_SUBJECT] $SELECTED_TOPIC"
+          echo "📂 File Path: $FILE_NAME"
           
-          # 3. 마크다운 보고서 자동 생성
+          # ==========================================================
+          # 📝 마크다운 보고서 내용 작성
+          # ==========================================================
+          
           cat <<EOF > "$FILE_NAME"
-          # 📘 $SELECTED_SUBJECT 학습 보고서: $SELECTED_TOPIC
+          # 📘 $SELECTED_SUBJECT 학습: $SELECTED_TOPIC
           
           **학습일:** ${TODAY}
-          **작성자:** Auto Study Bot
+          **주제:** $SELECTED_SUBJECT
           
           ---
           
           ## 1. 개요 (Overview)
-          오늘의 학습 주제는 **'$SELECTED_SUBJECT'** 영역의 핵심 내용인 **'$SELECTED_TOPIC'**입니다.
-          정보보안기사 필기 및 실기 시험에서 중요하게 다뤄지는 항목입니다.
+          **$SELECTED_TOPIC**은(는) 정보보안기사 시험의 **$SELECTED_SUBJECT** 과목에서 매우 중요한 비중을 차지하는 핵심 개념입니다.
           
-          ## 2. 핵심 요약 (Core Concepts)
-          *이 내용은 자동 생성된 템플릿입니다. 실제 학습 내용을 아래에 채워넣으세요.*
+          ## 2. 핵심 학습 내용 (Key Concepts)
+          *(이 문서는 GitHub Actions에 의해 매일 자동으로 생성되는 학습 템플릿입니다. 실제 공부 내용을 채워넣으세요.)*
           
-          ### 2.1 개념 정의
-          - **$SELECTED_TOPIC**란 무엇인가?
-          - 주요 특징 및 동작 원리
+          ### 2.1 개념 및 정의
+          - 정의:
+          - 필요성:
           
-          ### 2.2 주요 키워드
-          - [ ] 핵심 용어 1
-          - [ ] 핵심 용어 2
-          - [ ] 핵심 용어 3
+          ### 2.2 동작 원리 / 주요 특징
+          1. 
+          2. 
+          3. 
           
-          ## 3. 보안 위협 및 대응 방안
-          | 구분 | 내용 |
+          ## 3. 보안 위협 및 대응 (Threats & Countermeasures)
+          | 위협 요소 | 대응 방안 |
           |:---:|:---|
-          | **보안 위협** | 해당 기술과 관련된 취약점 또는 공격 기법 |
-          | **대응 방안** | 관리적/기술적/물리적 보안 대책 |
+          | (예시) 취약점 악용 | 패치 관리, 입력값 검증 |
+          | (예시) 권한 탈취 | 접근 통제 강화, 2FA 적용 |
           
           ---
           
-          ## 4. 결론 및 추가 학습 (Reference)
-          - 관련 법규 또는 표준:
-          - 추가로 공부할 연관 주제:
+          ## 4. 참고 자료 및 기출 포인트
+          - **기출 빈도:** ⭐⭐⭐⭐⭐
+          - **관련 키워드:**
           
-          > *This report was automatically initiated by GitHub Actions based on the study curriculum.*
+          > 🤖 *Auto-generated by Daily Study Bot*
           EOF
-          
-          echo "✅ 파일 생성 완료: $FILE_NAME"
 
       - name: Commit and Push
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "study-bot"
+          git config --global user.email "study-bot@noreply.github.com"
           
           git add reports/
-          # 변경사항이 있을 경우에만 커밋
+          
+          # 변경사항 확인 및 커밋
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Auto-Generate Study Report: $SELECTED_TOPIC (${TODAY})"
+            git commit -m "📚 Daily Study: $SELECTED_TOPIC ($TODAY)"
             git push
           fi
