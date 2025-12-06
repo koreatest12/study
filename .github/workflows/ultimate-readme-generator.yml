@@ -1,0 +1,208 @@
+name: Ultimate Study Blog Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict_mode:
+        description: '보안 강제 모드 (Public일 경우 중단)'
+        required: false
+        default: 'false'
+  push:
+    paths:
+      - 'reports/**' # 리포트가 추가되면 자동으로 블로그 갱신
+
+permissions:
+  contents: write
+
+jobs:
+  update-blog-readme:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 1. [보안] 리포지토리 가시성 감사
+      - name: 🛡️ Security Audit - Visibility
+        id: visibility
+        run: |
+          IS_PRIVATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }} | jq -r .private)
+          
+          if [ "$IS_PRIVATE" == "false" ]; then
+            echo "STATUS=Public" >> $GITHUB_OUTPUT
+            echo "BADGE_COLOR=red" >> $GITHUB_OUTPUT
+            if [ "${{ github.event.inputs.strict_mode }}" == "true" ]; then exit 1; fi
+          else
+            echo "STATUS=Private" >> $GITHUB_OUTPUT
+            echo "BADGE_COLOR=blue" >> $GITHUB_OUTPUT
+          fi
+
+      # 2. [기능] 학습 통계, 레벨, 프로그레스 바 계산
+      - name: 📊 Calculate Study Stats
+        id: stats
+        shell: bash
+        run: |
+          if [ -d "reports" ]; then
+            COUNT=$(ls reports/*.md 2>/dev/null | wc -l)
+          else
+            COUNT=0
+          fi
+          echo "REPORT_COUNT=$COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$COUNT" -lt 5 ]; then 
+            LEVEL_TEXT="Lv.1_Beginner"
+            COLOR="yellow"
+            BAR="▓░░░░░░░░░"
+          elif [ "$COUNT" -lt 15 ]; then 
+            LEVEL_TEXT="Lv.2_Script_Kiddie"
+            COLOR="orange"
+            BAR="▓▓▓░░░░░░░"
+          elif [ "$COUNT" -lt 30 ]; then 
+            LEVEL_TEXT="Lv.3_Analyst"
+            COLOR="blue"
+            BAR="▓▓▓▓▓░░░░░"
+          elif [ "$COUNT" -lt 50 ]; then 
+            LEVEL_TEXT="Lv.4_White_Hacker"
+            COLOR="purple"
+            BAR="▓▓▓▓▓▓▓░░░"
+          else 
+            LEVEL_TEXT="Lv.5_Master"
+            COLOR="red"
+            BAR="▓▓▓▓▓▓▓▓▓▓"
+          fi
+          
+          echo "LEVEL_BADGE=https://img.shields.io/badge/Level-$LEVEL_TEXT-$COLOR?style=for-the-badge" >> $GITHUB_OUTPUT
+          echo "PROGRESS_BAR=$BAR" >> $GITHUB_OUTPUT
+
+      # 3. [기능] 오늘의 보안 용어 (랜덤 생성)
+      - name: 🎲 Generate Daily Security Tip
+        id: tip
+        shell: bash
+        run: |
+          TIPS=(
+            "Zero Trust: 아무도 신뢰하지 않고 항상 검증하라."
+            "CIA Triad: 기밀성(Confidentiality), 무결성(Integrity), 가용성(Availability)."
+            "SQL Injection: 입력값 검증 실패로 발생하는 DB 해킹 기법."
+            "Ransomware: 데이터를 암호화하고 몸값을 요구하는 악성코드."
+            "Social Engineering: 사람의 심리를 이용해 정보를 탈취하는 기법."
+            "DDoS: 분산된 좀비 PC로 서비스 가용성을 마비시키는 공격."
+            "APT: 지능형 지속 위협, 특정 목표를 정해 장기간 공격하는 기법."
+            "Mitre ATT&CK: 해커의 공격 전술과 기술을 분류한 지식 베이스."
+          )
+          RANDOM_TIP=${TIPS[$RANDOM % ${#TIPS[@]}]}
+          echo "TODAY_TIP=$RANDOM_TIP" >> $GITHUB_OUTPUT
+
+      # 4. [메인] README.md 생성
+      - name: 📝 Generate Dynamic README
+        shell: bash
+        run: |
+          VISIBILITY_STATUS="${{ steps.visibility.outputs.STATUS }}"
+          VISIBILITY_COLOR="${{ steps.visibility.outputs.BADGE_COLOR }}"
+          TODAY_DATE=$(date +'%Y--%m--%d')
+          REPORT_COUNT="${{ steps.stats.outputs.REPORT_COUNT }}"
+          LEVEL_BADGE="${{ steps.stats.outputs.LEVEL_BADGE }}"
+          PROGRESS_BAR="${{ steps.stats.outputs.PROGRESS_BAR }}"
+          TODAY_TIP="${{ steps.tip.outputs.TODAY_TIP }}"
+          SECURITY_BADGE="https://img.shields.io/badge/Security-$VISIBILITY_STATUS-$VISIBILITY_COLOR?style=for-the-badge"
+          
+          cat <<EOF > README.md
+          # 🛡️ 정보보안기사 스터디 (Information Security Engineer)
+          
+          ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+          ![Security Audit]($SECURITY_BADGE)
+          ![Last Update](https://img.shields.io/badge/Updated-$TODAY_DATE-lightgrey?style=for-the-badge)
+          ![Level]($LEVEL_BADGE)
+          
+          > 💡 **Today's Security Term:**
+          > **$TODAY_TIP**
+          
+          ---
+          
+          ## 📂 학습 현황 (Study Dashboard)
+          
+          **Current Level Progress:**
+          \`$PROGRESS_BAR\` (Total Reports: **$REPORT_COUNT**)
+          
+          
+          ### 📚 학습 커리큘럼 (상세 보기)
+          <details>
+          <summary>👆 **1. 시스템 보안 (System Security) - 클릭하여 펼치기**</summary>
+          
+          - **운영체제 구조:** CPU/메모리 관리, 프로세스 스케줄링, 교착상태(Deadlock)
+          - **클라이언트 보안:** 윈도우 레지스트리, 악성코드(바이러스/랜섬웨어) 분석 및 대응
+          - **서버 보안:** 계정 관리(/etc/passwd), 권한 관리(chmod), 서비스 보안
+          - **로그 분석:** Syslog, wtmp/utmp, Windows Event Log, 침해사고 대응
+          </details>
+          
+          <details>
+          <summary>👆 **2. 네트워크 보안 (Network Security)**</summary>
+          
+          - **네트워크 일반:** OSI 7계층, TCP/IP 헤더 구조
+          - **공격 기법:** DoS/DDoS, Spoofing, Sniffing, Session Hijacking
+          - **보안 장비:** 방화벽, IDS/IPS, VPN, NAC
+          - **무선 보안:** WEP, WPA/WPA2, 802.1x
+          </details>
+          
+          <details>
+          <summary>👆 **3. 어플리케이션 보안 (App Security)**</summary>
+          
+          - **웹 보안:** OWASP Top 10 (SQL Injection, XSS, CSRF)
+          - **DB 보안:** 접근통제, 무결성, 암호화
+          - **전자상거래:** SET, SSL/TLS 프로토콜
+          </details>
+          
+          <details>
+          <summary>👆 **4. 정보보안 일반 (General)**</summary>
+          
+          - **보안 개요:** 기밀성, 무결성, 가용성 (CIA)
+          - **암호학:** 대칭키/공개키, 해시함수, 전자서명, PKI
+          - **접근 통제:** MAC, DAC, RBAC, 식별/인증/인가
+          </details>
+          
+          <details>
+          <summary>👆 **5. 관리 및 법규 (Compliance)**</summary>
+          
+          - **관리체계:** ISMS-P, 위험 관리(Risk Management), BCP/DRP
+          - **법규:** 정보통신망법, 개인정보보호법, 정보통신기반보호법
+          </details>
+          
+          ---
+          
+          ## 📑 학습 리포트 목록 (Reports)
+          | 날짜 | 리포트 제목 | 상태 |
+          |:---:|:---|:---:|
+          EOF
+          
+          if [ -d "reports" ] && ls reports/*.md >/dev/null 2>&1; then
+            ls -1t reports/*.md | while read filepath; do
+              filename=$(basename "$filepath")
+              dateStr=$(echo "$filename" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || date +'%Y-%m-%d')
+              echo "| $dateStr | [$filename]($filepath) | ✅ Verified |" >> README.md
+            done
+          else
+            echo "| - | 📝 작성된 리포트가 없습니다. | - |" >> README.md
+          fi
+          
+          echo -e "\n---\n*Auto-generated by GitHub Actions (Ultimate Edition)*" >> README.md
+
+      # 5. [보안] DLP 스캔 및 마스킹
+      - name: 🛡️ Security Guardrail - DLP Masking
+        run: |
+          KEYWORDS=("PRIVATE KEY" "AWS_ACCESS_KEY" "password=" "secret")
+          for KEY in "${KEYWORDS[@]}"; do
+            sed -i "s/$KEY/[REDACTED-SECRET]/g" README.md
+          done
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "security-bot"
+          git config --global user.email "bot@noreply.github.com"
+          git add README.md
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update Blog: Level ${{ steps.stats.outputs.REPORT_COUNT }} (Safe Mode)"
+            git push
+          fi
