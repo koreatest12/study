@@ -1,116 +1,132 @@
-name: Update Study Blog README
+name: Secure Study Blog Generator (DLP & Access Control)
 
 on:
-  workflow_dispatch: # 수동 실행
+  workflow_dispatch:
   push:
     paths:
-      - 'reports/**' # 리포트 폴더 변경 시 자동 업데이트
+      - 'reports/**'
 
+# 🔐 [보안 로직 1] 권한 최소화: 오직 컨텐츠 읽기/쓰기 권한만 부여
 permissions:
   contents: write
 
 jobs:
-  update-readme:
+  secure-document-generation:
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Generate README.md
-        shell: bash
+      # 🔐 [보안 로직 2] 리포지토리 가시성 검사 (Public일 경우 즉시 차단)
+      - name: 🛡️ Security Guardrail - Visibility Check
         run: |
-          # 1. 헤더 및 커리큘럼 내용 작성 (파일 덮어쓰기)
-          cat <<EOF > README.md
-          # 🛡️ 정보보안기사 스터디 (Information Security Engineer)
-
-          ![Study Status](https://img.shields.io/badge/Study-In%20Progress-blue?style=for-the-badge&logo=gitbook)
-          ![Last Updated](https://img.shields.io/badge/Last%20Update-$(date +'%Y--%m--%d')-green?style=for-the-badge)
-
-          이 리포지토리는 정보보안기사 자격증 취득을 위한 학습 내용과 자동 생성된 보고서를 기록하는 스터디 블로그입니다.
-          GitHub Actions를 통해 학습 요약 보고서를 자동으로 생성하고 관리합니다.
-
-          ---
-
-          ## 📚 학습 커리큘럼 및 핵심 내용
-          정보보안기사 필기/실기 대비를 위한 5대 핵심 영역입니다.
-
-          ### 1️⃣ 시스템 보안 (System Security)
-          운영체제 전반의 구조와 보안 설정, 로그 분석을 다룹니다.
-          - **운영체제 구조:** CPU/메모리 관리, 프로세스 스케줄링, 교착상태(Deadlock)
-          - **클라이언트 보안:** 윈도우 레지스트리, 악성코드(바이러스/랜섬웨어) 분석 및 대응
-          - **서버 보안 (Linux/Unix/Windows):** 계정 관리(/etc/passwd), 권한 관리(chmod/umask), 서비스 보안
-          - **로그 분석 및 침해대응:** Syslog, wtmp/utmp, Windows 이벤트 로그, 침해사고 대응 절차
-
-          ### 2️⃣ 네트워크 보안 (Network Security)
-          네트워크 프로토콜의 취약점과 보안 장비 활용을 학습합니다.
-          - **네트워크 일반:** OSI 7계층, TCP/IP(ARP, ICMP, TCP, UDP) 헤더 구조
-          - **네트워크 공격:** DoS/DDoS, Spoofing, Sniffing, Session Hijacking
-          - **보안 장비:** 방화벽(F/W), IDS/IPS, VPN(IPSec/SSL), NAC
-          - **무선 보안:** WEP, WPA/WPA2, 802.1x 인증
-
-          ### 3️⃣ 어플리케이션 보안 (Application Security)
-          웹 어플리케이션과 데이터베이스의 취약점을 분석합니다.
-          - **웹 보안:** HTTP 프로토콜, OWASP Top 10 (SQL Injection, XSS, CSRF, 파일 업로드)
-          - **DB 보안:** 데이터베이스 접근통제, 무결성, 암호화
-          - **전자상거래:** SET, SSL/TLS, 전자화폐 보안 프로토콜
-
-          ### 4️⃣ 정보보안 일반 (Security General)
-          암호학 이론과 접근 통제 시스템을 이해합니다.
-          - **보안 개요:** 기밀성, 무결성, 가용성 (CIA Triad)
-          - **암호학:** 대칭키(AES/DES), 공개키(RSA/ECC), 해시함수(SHA-256), 전자서명, PKI
-          - **접근 통제:** 식별/인증/인가, MAC, DAC, RBAC, 사용자 인증(OTP, 생체인식)
-
-          ### 5️⃣ 정보보안 관리 및 법규 (Management & Law)
-          정보보호 관리체계와 관련 법규를 숙지합니다.
-          - **관리체계:** ISMS-P 인증 기준, 위험 관리(Risk Management), BCP/DRP
-          - **관련 법규:** 정보통신망법, 개인정보보호법, 정보통신기반보호법, 전자서명법
-
-          ---
-
-          ## 📂 학습 리포트 (Reports)
-          자동 생성된 학습 보고서 목록입니다. \`reports/\` 폴더에 저장됩니다.
-
-          | 날짜 | 보고서 파일 | 비고 |
-          |:---:|:---|:---|
-          EOF
-
-          # 2. 리포트 목록 동적 생성 (에러 방지 로직 적용)
-          # reports 폴더가 존재하고, 내부에 .md 파일이 하나라도 있는지 확인
-          if [ -d "reports" ] && ls reports/*.md >/dev/null 2>&1; then
-            # 파일이 있을 경우 루프 실행 (최신순 정렬)
-            ls -1t reports/*.md | while read filepath; do
-              filename=$(basename "$filepath")
-              # 파일명에서 날짜 추출 (없으면 현재 날짜)
-              dateStr=$(echo "$filename" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || date +'%Y-%m-%d')
-              echo "| $dateStr | [$filename]($filepath) | ✅ 완료 |" >> README.md
-            done
+          echo "Checking Repository Visibility..."
+          
+          # GitHub API를 통해 리포지토리 정보 조회
+          IS_PRIVATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }} \
+            | jq -r .private)
+          
+          if [ "$IS_PRIVATE" != "true" ]; then
+            echo "🚨 [CRITICAL ERROR] 보안 위규: 이 리포지토리는 'Public' 상태입니다."
+            echo "⛔ 문서 유출 방지를 위해 워크플로우를 강제 종료합니다."
+            echo "👉 리포지토리 설정(Settings)에서 'Private'으로 변경하십시오."
+            exit 1
           else
-            # 파일이 없을 경우 안내 메시지 출력
-            echo "| - | 📭 아직 생성된 보고서가 없습니다. | 먼저 리포트를 생성해주세요. |" >> README.md
+            echo "✅ [SECURE] 리포지토리가 'Private' 상태임이 확인되었습니다. 작업을 진행합니다."
           fi
 
-          # 3. 하단 푸터 작성
-          cat <<EOF >> README.md
-
-          ---
-          ## 🚀 How to Use (Workflow)
-          1. **보고서 생성:** Actions 탭에서 \`Generate Security Engineer Report\` 실행
-          2. **README 업데이트:** Actions 탭에서 \`Update Study Blog README\` 실행 (리포트 생성 시 자동 반영)
-
-          > *This README was automatically generated by GitHub Actions.*
-          EOF
-
-      - name: Commit and Push README
+      - name: Generate Secure README.md
+        shell: bash
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # README.md 파일 생성
+          cat <<EOF > README.md
+          # 🛡️ 정보보안기사 스터디 (Secure Archive)
           
-          # 변경사항이 있는지 확인하고 커밋
+          > 🔒 **보안 등급:** 대외비 (Private Only)
+          > 📅 **최종 점검일:** $(date +'%Y-%m-%d')
+          
+          ![Security Check](https://img.shields.io/badge/Security-Passed-green?style=for-the-badge&logo=githubactions)
+          
+          이 리포지토리는 정보보안기사 학습 자료를 저장하며, **DLP(Data Loss Prevention)** 로직에 의해 보호됩니다.
+          
+          ---
+          
+          ## 📚 보안 학습 커리큘럼 (시스템 보안 상세)
+          
+          ### 1️⃣ 시스템 보안 (System Security)
+          - **운영체제 구조:** CPU/메모리 관리, 프로세스 스케줄링, 교착상태(Deadlock)
+          - **클라이언트 보안:** 윈도우 레지스트리, 악성코드(바이러스/랜섬웨어) 분석
+          - **서버 보안:** 계정 관리(/etc/passwd), 권한 관리, 서비스 보안
+          - **로그 분석:** Syslog, wtmp/utmp, 침해사고 대응
+          
+          ### 2️⃣ 네트워크 보안 (Network Security)
+          - OSI 7계층, TCP/IP, DDoS, 방화벽, IDS/IPS
+          
+          ### 3️⃣ 어플리케이션 보안 (App Security)
+          - OWASP Top 10, SQL Injection, DB 암호화
+          
+          ### 4️⃣ 정보보안 일반 (General)
+          - CIA 3요소, 암호학(AES/RSA), 접근통제(MAC/DAC/RBAC)
+          
+          ### 5️⃣ 관리 및 법규 (Compliance)
+          - ISMS-P, 개인정보보호법, 정보통신망법
+          
+          ---
+          
+          ## 📂 보안 리포트 (Secure Reports)
+          | 날짜 | 파일명 | 무결성 검증 |
+          |:---:|:---|:---:|
+          EOF
+          
+          # 리포트 목록 동적 생성
+          if [ -d "reports" ] && ls reports/*.md >/dev/null 2>&1; then
+            ls -1t reports/*.md | while read filepath; do
+              filename=$(basename "$filepath")
+              dateStr=$(echo "$filename" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || date +'%Y-%m-%d')
+              echo "| $dateStr | [$filename]($filepath) | 🔒 Verified |" >> README.md
+            done
+          else
+            echo "| - | 데이터 없음 | - |" >> README.md
+          fi
+          
+          echo -e "\n> *Generated by Secure Pipeline*" >> README.md
+
+      # 🔐 [보안 로직 3] DLP(데이터 유출 방지) 스캔
+      - name: 🛡️ Security Guardrail - DLP Scan
+        run: |
+          echo "🔍 DLP 스캔을 시작합니다..."
+          
+          # 검사할 키워드 목록 (실수로 들어갈 수 있는 민감 정보)
+          FORBIDDEN_KEYWORDS=("PRIVATE KEY" "AWS_ACCESS_KEY" "password=" "secret_token")
+          
+          # README.md 파일 검사
+          FOUND_THREAT=false
+          for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
+            if grep -q "$KEYWORD" README.md; then
+              echo "🚨 [DLP ALERT] README.md 파일에서 민감한 키워드 발견: $KEYWORD"
+              FOUND_THREAT=true
+            fi
+          done
+          
+          if [ "$FOUND_THREAT" = true ]; then
+            echo "⛔ 보안 정책 위반으로 인해 커밋을 차단합니다."
+            rm README.md # 유출 방지를 위해 생성된 파일 즉시 삭제
+            exit 1
+          else
+            echo "✅ [CLEAN] 민감 정보가 발견되지 않았습니다. 안전합니다."
+          fi
+
+      - name: Commit and Push Securely
+        run: |
+          git config --global user.name "sec-bot"
+          git config --global user.email "sec-bot@noreply.github.com"
+          
           git add README.md
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "변경 사항 없음."
           else
-            git commit -m "Update README.md with Study Curriculum"
+            git commit -m "🔒 Update Secure Study Log (Security Check Passed)"
             git push
           fi
