@@ -1,4 +1,4 @@
-name: Ultimate Study Blog Generator
+name: Ultimate Study Blog Generator (Fixed & Enhanced)
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         default: 'false'
   push:
     paths:
-      - 'reports/**' # 리포트가 추가되면 자동으로 블로그 갱신
+      - 'reports/**'
 
 permissions:
   contents: write
@@ -26,66 +26,116 @@ jobs:
       - name: 🛡️ Security Audit - Visibility
         id: visibility
         run: |
+          # API 호출 결과를 쉘 변수에 저장
           IS_PRIVATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }} | jq -r .private)
           
           if [ "$IS_PRIVATE" == "false" ]; then
-            echo "STATUS=Public (Warning)" >> $GITHUB_OUTPUT
+            echo "STATUS=Public" >> $GITHUB_OUTPUT
+            echo "BADGE_COLOR=red" >> $GITHUB_OUTPUT
             echo "⚠️ Warning: Repository is Public."
+            # strict mode가 켜져있을 때만 종료
             if [ "${{ github.event.inputs.strict_mode }}" == "true" ]; then exit 1; fi
           else
-            echo "STATUS=Private (Secure)" >> $GITHUB_OUTPUT
+            echo "STATUS=Private" >> $GITHUB_OUTPUT
+            echo "BADGE_COLOR=blue" >> $GITHUB_OUTPUT
           fi
 
-      # 2. [기능] 학습 통계 및 레벨 계산
+      # 2. [기능] 학습 통계, 레벨, 프로그레스 바 계산
       - name: 📊 Calculate Study Stats
         id: stats
         shell: bash
         run: |
+          # 리포트 개수 세기
           if [ -d "reports" ]; then
             COUNT=$(ls reports/*.md 2>/dev/null | wc -l)
           else
             COUNT=0
           fi
-          
           echo "REPORT_COUNT=$COUNT" >> $GITHUB_OUTPUT
           
-          # 레벨 산정 로직
-          if [ "$COUNT" -lt 5 ]; then LEVEL="Lv.1 보안 입문자"; COLOR="yellow";
-          elif [ "$COUNT" -lt 15 ]; then LEVEL="Lv.2 스크립트 키디"; COLOR="orange";
-          elif [ "$COUNT" -lt 30 ]; then LEVEL="Lv.3 보안 분석가"; COLOR="blue";
-          elif [ "$COUNT" -lt 50 ]; then LEVEL="Lv.4 화이트 해커"; COLOR="purple";
-          else LEVEL="Lv.5 정보보안 마스터"; COLOR="red"; fi
+          # 레벨 및 칭호 산정 (뱃지 URL에 공백 제거 및 인코딩 적용)
+          if [ "$COUNT" -lt 5 ]; then 
+            LEVEL_TEXT="Lv.1_Beginner"
+            COLOR="yellow"
+            BAR="▓░░░░░░░░░"
+          elif [ "$COUNT" -lt 15 ]; then 
+            LEVEL_TEXT="Lv.2_Script_Kiddie"
+            COLOR="orange"
+            BAR="▓▓▓░░░░░░░"
+          elif [ "$COUNT" -lt 30 ]; then 
+            LEVEL_TEXT="Lv.3_Analyst"
+            COLOR="blue"
+            BAR="▓▓▓▓▓░░░░░"
+          elif [ "$COUNT" -lt 50 ]; then 
+            LEVEL_TEXT="Lv.4_White_Hacker"
+            COLOR="purple"
+            BAR="▓▓▓▓▓▓▓░░░"
+          else 
+            LEVEL_TEXT="Lv.5_Master"
+            COLOR="red"
+            BAR="▓▓▓▓▓▓▓▓▓▓"
+          fi
           
-          echo "LEVEL_BADGE=https://img.shields.io/badge/Level-$LEVEL-$COLOR?style=for-the-badge" >> $GITHUB_OUTPUT
+          echo "LEVEL_BADGE=https://img.shields.io/badge/Level-$LEVEL_TEXT-$COLOR?style=for-the-badge" >> $GITHUB_OUTPUT
+          echo "PROGRESS_BAR=$BAR" >> $GITHUB_OUTPUT
 
       # 3. [기능] 오늘의 보안 용어 (랜덤 생성)
       - name: 🎲 Generate Daily Security Tip
         id: tip
         shell: bash
         run: |
-          TIPS=("Zero Trust: 아무도 신뢰하지 않고 항상 검증하라." "CIA Triad: 기밀성, 무결성, 가용성은 보안의 3대 요소다." "SQL Injection: 입력값 검증 실패로 발생하는 DB 해킹 기법." "Ransomware: 데이터를 암호화하고 몸값을 요구하는 악성코드." "Social Engineering: 사람의 심리를 이용해 정보를 탈취하는 기법." "DDos: 분산된 좀비 PC로 서비스 가용성을 마비시키는 공격.")
+          # 배열 선언
+          TIPS=(
+            "Zero Trust: 아무도 신뢰하지 않고 항상 검증하라."
+            "CIA Triad: 기밀성(Confidentiality), 무결성(Integrity), 가용성(Availability)."
+            "SQL Injection: 입력값 검증 실패로 발생하는 DB 해킹 기법."
+            "Ransomware: 데이터를 암호화하고 몸값을 요구하는 악성코드."
+            "Social Engineering: 기술이 아닌 사람의 심리를 이용해 정보를 탈취하는 기법."
+            "DDoS: 분산된 좀비 PC로 서비스 가용성을 마비시키는 공격."
+            "APT: 지능형 지속 위협, 특정 목표를 정해 장기간 공격하는 기법."
+            "Mitre ATT&CK: 해커의 공격 전술과 기술을 분류한 지식 베이스."
+          )
+          # 랜덤 선택
           RANDOM_TIP=${TIPS[$RANDOM % ${#TIPS[@]}]}
           echo "TODAY_TIP=$RANDOM_TIP" >> $GITHUB_OUTPUT
 
-      # 4. [메인] README.md 생성
+      # 4. [메인] README.md 생성 (에러 수정됨)
       - name: 📝 Generate Dynamic README
         shell: bash
         run: |
+          # 1. 변수 준비 (GitHub Actions 문법을 쉘 변수로 변환)
+          VISIBILITY_STATUS="${{ steps.visibility.outputs.STATUS }}"
+          VISIBILITY_COLOR="${{ steps.visibility.outputs.BADGE_COLOR }}"
+          TODAY_DATE=$(date +'%Y--%m--%d')
+          
+          REPORT_COUNT="${{ steps.stats.outputs.REPORT_COUNT }}"
+          LEVEL_BADGE="${{ steps.stats.outputs.LEVEL_BADGE }}"
+          PROGRESS_BAR="${{ steps.stats.outputs.PROGRESS_BAR }}"
+          TODAY_TIP="${{ steps.tip.outputs.TODAY_TIP }}"
+          
+          # 보안 뱃지 URL 조립
+          SECURITY_BADGE="https://img.shields.io/badge/Security-$VISIBILITY_STATUS-$VISIBILITY_COLOR?style=for-the-badge"
+          
+          # 2. README 파일 작성 (이제 순수 쉘 변수만 사용하므로 에러 없음)
           cat <<EOF > README.md
           # 🛡️ 정보보안기사 스터디 (Information Security Engineer)
           
           ![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
-          ![Security Audit](${ { steps.visibility.outputs.STATUS == 'Private (Secure)' && 'https://img.shields.io/badge/Security-Secure-blue?style=for-the-badge' || 'https://img.shields.io/badge/Security-Warning-red?style=for-the-badge' } })
-          ![Last Update](https://img.shields.io/badge/Updated-$(date +'%Y--%m--%d')-lightgrey?style=for-the-badge)
-          ![Level](${{ steps.stats.outputs.LEVEL_BADGE }})
+          ![Security Audit]($SECURITY_BADGE)
+          ![Last Update](https://img.shields.io/badge/Updated-$TODAY_DATE-lightgrey?style=for-the-badge)
+          ![Level]($LEVEL_BADGE)
           
-          > 💡 **Today's Security Term:** > **${{ steps.tip.outputs.TODAY_TIP }}**
+          > 💡 **Today's Security Term:**
+          > **$TODAY_TIP**
           
           ---
           
           ## 📂 학습 현황 (Study Dashboard)
-          현재까지 **${{ steps.stats.outputs.REPORT_COUNT }}**개의 학습 보고서가 작성되었습니다.
+          
+          **Current Level Progress:**
+          \`$PROGRESS_BAR\` (Total Reports: **$REPORT_COUNT**)
+          
           
           ### 📚 학습 커리큘럼 (상세 보기)
           <details>
@@ -96,7 +146,7 @@ jobs:
           - **서버 보안:** 계정 관리(/etc/passwd), 권한 관리(chmod), 서비스 보안
           - **로그 분석:** Syslog, wtmp/utmp, Windows Event Log, 침해사고 대응
           </details>
-
+          
           <details>
           <summary>👆 **2. 네트워크 보안 (Network Security)**</summary>
           
@@ -105,7 +155,7 @@ jobs:
           - **보안 장비:** 방화벽, IDS/IPS, VPN, NAC
           - **무선 보안:** WEP, WPA/WPA2, 802.1x
           </details>
-
+          
           <details>
           <summary>👆 **3. 어플리케이션 보안 (App Security)**</summary>
           
@@ -113,7 +163,7 @@ jobs:
           - **DB 보안:** 접근통제, 무결성, 암호화
           - **전자상거래:** SET, SSL/TLS 프로토콜
           </details>
-
+          
           <details>
           <summary>👆 **4. 정보보안 일반 (General)**</summary>
           
@@ -121,7 +171,7 @@ jobs:
           - **암호학:** 대칭키/공개키, 해시함수, 전자서명, PKI
           - **접근 통제:** MAC, DAC, RBAC, 식별/인증/인가
           </details>
-
+          
           <details>
           <summary>👆 **5. 관리 및 법규 (Compliance)**</summary>
           
@@ -136,7 +186,7 @@ jobs:
           |:---:|:---|:---:|
           EOF
           
-          # 리포트 목록 생성 (안정성 강화)
+          # 3. 리포트 목록 동적 생성 (안정성 강화)
           if [ -d "reports" ] && ls reports/*.md >/dev/null 2>&1; then
             ls -1t reports/*.md | while read filepath; do
               filename=$(basename "$filepath")
@@ -149,7 +199,7 @@ jobs:
           
           echo -e "\n---\n*Auto-generated by GitHub Actions (Ultimate Edition)*" >> README.md
 
-      # 5. [보안] DLP 스캔 및 마스킹 (민감 정보 자동 가림)
+      # 5. [보안] DLP 스캔 및 마스킹
       - name: 🛡️ Security Guardrail - DLP Masking
         run: |
           KEYWORDS=("PRIVATE KEY" "AWS_ACCESS_KEY" "password=" "secret")
@@ -166,6 +216,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update Blog: Level ${{ steps.stats.outputs.REPORT_COUNT }} (Sec Audit: ${{ steps.visibility.outputs.STATUS }})"
+            git commit -m "Update Blog: Level ${{ steps.stats.outputs.REPORT_COUNT }} (Safe Mode)"
             git push
           fi
