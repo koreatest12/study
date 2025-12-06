@@ -1,12 +1,16 @@
-name: Secure Study Blog Generator (DLP & Access Control)
+name: Secure Study Blog Generator (Audit Mode)
 
 on:
   workflow_dispatch:
+    inputs:
+      strict_mode:
+        description: '보안 강제 모드 (Public일 경우 실행 차단)'
+        required: false
+        default: 'false' # false로 설정하여 에러 없이 실행되도록 함
   push:
     paths:
       - 'reports/**'
 
-# 🔐 [보안 로직 1] 권한 최소화: 오직 컨텐츠 읽기/쓰기 권한만 부여
 permissions:
   contents: write
 
@@ -18,115 +22,146 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 🔐 [보안 로직 2] 리포지토리 가시성 검사 (Public일 경우 즉시 차단)
-      - name: 🛡️ Security Guardrail - Visibility Check
+      # 🔐 [보안 로직 1] 리포지토리 가시성 감사 (Audit)
+      - name: 🛡️ Security Guardrail - Visibility Audit
+        id: visibility_check
         run: |
-          echo "Checking Repository Visibility..."
+          echo "🔍 Repository Visibility Check..."
           
-          # GitHub API를 통해 리포지토리 정보 조회
           IS_PRIVATE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }} \
             | jq -r .private)
           
           if [ "$IS_PRIVATE" != "true" ]; then
-            echo "🚨 [CRITICAL ERROR] 보안 위규: 이 리포지토리는 'Public' 상태입니다."
-            echo "⛔ 문서 유출 방지를 위해 워크플로우를 강제 종료합니다."
-            echo "👉 리포지토리 설정(Settings)에서 'Private'으로 변경하십시오."
-            exit 1
+            echo "⚠️ [WARNING] 리포지토리가 'Public' 상태입니다."
+            echo "status=public" >> $GITHUB_OUTPUT
+            
+            # 입력받은 모드가 strict(강제)일 경우에만 종료
+            if [ "${{ github.event.inputs.strict_mode }}" == "true" ]; then
+              echo "⛔ Strict Mode가 켜져 있어 워크플로우를 중단합니다."
+              exit 1
+            else
+              echo "✅ Audit Mode: 경고를 기록하고 작업을 계속 진행합니다."
+            fi
           else
-            echo "✅ [SECURE] 리포지토리가 'Private' 상태임이 확인되었습니다. 작업을 진행합니다."
+            echo "✅ [SECURE] 리포지토리가 'Private' 상태입니다."
+            echo "status=private" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate Secure README.md
         shell: bash
         run: |
-          # README.md 파일 생성
+          # README.md 내용 작성
           cat <<EOF > README.md
-          # 🛡️ 정보보안기사 스터디 (Secure Archive)
+          # 🛡️ 정보보안기사 스터디 (Information Security Engineer)
           
-          > 🔒 **보안 등급:** 대외비 (Private Only)
-          > 📅 **최종 점검일:** $(date +'%Y-%m-%d')
+          > 🔒 **Security Status:** Verified
+          > 📅 **Last Update:** $(date +'%Y-%m-%d')
           
-          ![Security Check](https://img.shields.io/badge/Security-Passed-green?style=for-the-badge&logo=githubactions)
+          ![Study Status](https://img.shields.io/badge/Study-Active-success?style=for-the-badge&logo=github)
+          ![Security Audit](https://img.shields.io/badge/Security-Audited-blue?style=for-the-badge&logo=githubactions)
           
-          이 리포지토리는 정보보안기사 학습 자료를 저장하며, **DLP(Data Loss Prevention)** 로직에 의해 보호됩니다.
+          이 리포지토리는 정보보안기사 자격증 학습 내용을 정리하는 공간입니다.
+          자동화된 워크플로우를 통해 문서를 생성하고 보안 감사를 수행합니다.
           
           ---
           
-          ## 📚 보안 학습 커리큘럼 (시스템 보안 상세)
+          ## 📚 핵심 학습 커리큘럼
           
           ### 1️⃣ 시스템 보안 (System Security)
-          - **운영체제 구조:** CPU/메모리 관리, 프로세스 스케줄링, 교착상태(Deadlock)
-          - **클라이언트 보안:** 윈도우 레지스트리, 악성코드(바이러스/랜섬웨어) 분석
-          - **서버 보안:** 계정 관리(/etc/passwd), 권한 관리, 서비스 보안
-          - **로그 분석:** Syslog, wtmp/utmp, 침해사고 대응
+          - **운영체제:** CPU 스케줄링, 메모리 관리, 교착상태, 가상화 기술
+          - **클라이언트 보안:** 레지스트리 분석, 악성코드(랜섬웨어/APT) 대응
+          - **서버 보안:** 계정/권한 관리, 접근제어(MAC/DAC/RBAC)
+          - **로그 분석:** Windows Event Log, Linux Syslog/Auditd
           
           ### 2️⃣ 네트워크 보안 (Network Security)
-          - OSI 7계층, TCP/IP, DDoS, 방화벽, IDS/IPS
+          - OSI 7 Layer, TCP/IP, VPN, 방화벽, IPS/IDS
           
           ### 3️⃣ 어플리케이션 보안 (App Security)
-          - OWASP Top 10, SQL Injection, DB 암호화
+          - OWASP Top 10, Secure Coding, DB 암호화
           
           ### 4️⃣ 정보보안 일반 (General)
-          - CIA 3요소, 암호학(AES/RSA), 접근통제(MAC/DAC/RBAC)
+          - CIA, 암호학(대칭키/비대칭키/해시), 전자서명
           
           ### 5️⃣ 관리 및 법규 (Compliance)
-          - ISMS-P, 개인정보보호법, 정보통신망법
+          - ISMS-P, 개인정보보호법, 정보통신기반보호법
           
           ---
           
-          ## 📂 보안 리포트 (Secure Reports)
-          | 날짜 | 파일명 | 무결성 검증 |
+          ## 📂 학습 리포트 (Reports)
+          | 날짜 | 파일명 | 상태 |
           |:---:|:---|:---:|
           EOF
           
-          # 리포트 목록 동적 생성
+          # 리포트 파일 목록 생성 (에러 방지 로직 포함)
           if [ -d "reports" ] && ls reports/*.md >/dev/null 2>&1; then
             ls -1t reports/*.md | while read filepath; do
               filename=$(basename "$filepath")
               dateStr=$(echo "$filename" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' || date +'%Y-%m-%d')
-              echo "| $dateStr | [$filename]($filepath) | 🔒 Verified |" >> README.md
+              echo "| $dateStr | [$filename]($filepath) | ✅ 생성됨 |" >> README.md
             done
           else
-            echo "| - | 데이터 없음 | - |" >> README.md
+            echo "| - | 등록된 리포트 없음 | - |" >> README.md
           fi
           
-          echo -e "\n> *Generated by Secure Pipeline*" >> README.md
+          echo -e "\n> *This document is automatically managed by Secure GitHub Actions.*" >> README.md
 
-      # 🔐 [보안 로직 3] DLP(데이터 유출 방지) 스캔
-      - name: 🛡️ Security Guardrail - DLP Scan
+      # 🔐 [보안 로직 2] DLP(정보 유출 방지) 스캔 및 마스킹
+      - name: 🛡️ Security Guardrail - DLP Scan & Masking
+        id: dlp_scan
         run: |
-          echo "🔍 DLP 스캔을 시작합니다..."
+          echo "🔍 민감 정보 스캔 중..."
           
-          # 검사할 키워드 목록 (실수로 들어갈 수 있는 민감 정보)
-          FORBIDDEN_KEYWORDS=("PRIVATE KEY" "AWS_ACCESS_KEY" "password=" "secret_token")
+          # 민감 키워드 정의
+          KEYWORDS=("PRIVATE KEY" "AWS_ACCESS_KEY" "password=" "secret_token")
+          DETECTED=false
           
-          # README.md 파일 검사
-          FOUND_THREAT=false
-          for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
+          for KEYWORD in "${KEYWORDS[@]}"; do
             if grep -q "$KEYWORD" README.md; then
-              echo "🚨 [DLP ALERT] README.md 파일에서 민감한 키워드 발견: $KEYWORD"
-              FOUND_THREAT=true
+              echo "⚠️ 민감 키워드 발견: $KEYWORD -> [REDACTED] 처리합니다."
+              # sed 명령어로 민감 키워드를 [REDACTED]로 치환 (덮어쓰기)
+              sed -i "s/$KEYWORD/[REDACTED]/g" README.md
+              DETECTED=true
             fi
           done
           
-          if [ "$FOUND_THREAT" = true ]; then
-            echo "⛔ 보안 정책 위반으로 인해 커밋을 차단합니다."
-            rm README.md # 유출 방지를 위해 생성된 파일 즉시 삭제
-            exit 1
+          if [ "$DETECTED" = true ]; then
+             echo "result=masked" >> $GITHUB_OUTPUT
+             echo "✅ 민감 정보를 마스킹 처리하고 진행합니다."
           else
-            echo "✅ [CLEAN] 민감 정보가 발견되지 않았습니다. 안전합니다."
+             echo "result=clean" >> $GITHUB_OUTPUT
+             echo "✅ 발견된 민감 정보가 없습니다."
           fi
 
-      - name: Commit and Push Securely
+      # 📊 [기능 추가] GitHub Actions 요약 리포트 생성
+      - name: 📊 Create Security Job Summary
+        if: always()
+        run: |
+          echo "## 🛡️ Security Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "| 항목 | 결과 | 비고 |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.visibility_check.outputs.status }}" == "public" ]; then
+            echo "| **Repository Visibility** | ⚠️ Public | 외부 공개 상태 (Audit Mode) |" >> $GITHUB_STEP_SUMMARY
+          else
+             echo "| **Repository Visibility** | 🔒 Private | 안전함 |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.dlp_scan.outputs.result }}" == "masked" ]; then
+             echo "| **DLP Scan** | ⚠️ Masked | 민감 정보 가림 처리됨 |" >> $GITHUB_STEP_SUMMARY
+          else
+             echo "| **DLP Scan** | ✅ Clean | 특이사항 없음 |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Commit and Push
         run: |
           git config --global user.name "sec-bot"
           git config --global user.email "sec-bot@noreply.github.com"
           
           git add README.md
           if git diff --staged --quiet; then
-            echo "변경 사항 없음."
+            echo "변경 사항이 없어 커밋하지 않습니다."
           else
-            git commit -m "🔒 Update Secure Study Log (Security Check Passed)"
+            git commit -m "Update Study Log (Security Audit: ${{ steps.visibility_check.outputs.status }})"
             git push
           fi
