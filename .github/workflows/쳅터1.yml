@@ -1,0 +1,103 @@
+name: Generate Security Engineer Report
+
+on:
+  workflow_dispatch: # 수동 실행 트리거
+
+permissions:
+  contents: write # 파일 생성 및 커밋을 위한 권한
+
+jobs:
+  create-report:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Date
+        id: date
+        run: echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Create Report Directory
+        run: mkdir -p reports
+
+      - name: Generate Markdown Report
+        run: |
+          # 파일명 설정 (예: Security_Exam_Report_2025-12-06.md)
+          FILE_NAME="reports/Security_Exam_Report_${{ env.TODAY }}.md"
+          
+          # 보고서 내용 작성 (Here Document 사용)
+          cat <<EOF > $FILE_NAME
+          # 정보보안기사 학습 보고서
+          **작성일:** ${{ env.TODAY }}
+          **작성자:** GitHub Actions Bot
+
+          ---
+
+          ## 1. 시스템 보안 (System Security) 상세 목차
+          정보보안기사 출제 기준에 따른 시스템 보안 과목의 상세 학습 목차입니다.
+
+          ### 1.1 운영체제 이해 및 관리
+          - **운영체제의 개요:** 운영체제 정의, 목적, 구성요소, 커널 모드/유저 모드
+          - **프로세스 관리:** 프로세스 상태 전이, 스케줄링 알고리즘, 교착상태(Deadlock)
+          - **메모리 관리:** 가상 메모리, 페이징, 세그멘테이션, 페이지 교체 알고리즘
+          - **입출력 및 파일 시스템:** 디스크 스케줄링, 파일 시스템 구조(FAT, NTFS, EXT, UFS)
+
+          ### 1.2 클라이언트 보안
+          - **윈도우 보안:** 레지스트리 구조 및 보안, 공유 폴더 관리, 계정 정책
+          - **인터넷 활용 보안:** 웹 브라우저 보안 설정, 이메일 보안
+          - **악성 소프트웨어:** 바이러스, 웜, 트로이목마, 스파이웨어, 랜섬웨어 분석 및 대응
+
+          ### 1.3 서버 보안 (UNIX/Linux)
+          - **계정 및 권한 관리:** /etc/passwd, /etc/shadow, 그룹 관리, 파일 권한(chmod, umask)
+          - **서비스 관리:** 불필요한 서비스 제거, inetd/xinetd 설정
+          - **접근 통제:** TCP Wrapper, PAM(Pluggable Authentication Modules)
+          - **시스템 설정:** SUID/SGID/Sticky Bit 관리, 환경변수 설정
+
+          ### 1.4 서버 보안 (Windows Server)
+          - **계정 관리:** Administrator 및 Guest 계정 관리, 로컬 보안 정책
+          - **서비스 및 로그:** 불필요한 서비스 중지, IIS 보안 설정
+          - **보안 설정:** 보안 템플릿, Active Directory 개념
+
+          ### 1.5 로그 분석 및 침해 사고 대응
+          - **Linux 로그:** Syslog, auth.log, messages, wtmp, utmp, lastlog, history
+          - **Windows 로그:** 이벤트 뷰어(응용 프로그램, 보안, 시스템 로그)
+          - **침해 사고 대응:** 침해 사고 단계별 대응 절차, 포렌식 기초(증거 수집 원칙)
+
+          ---
+
+          ## 2. 기타 과목 핵심 요약
+
+          ### 2.1 네트워크 보안
+          - OSI 7계층 및 TCP/IP 프로토콜 취약점
+          - 방화벽, IDS, IPS, VPN, NAC 등 보안 솔루션
+          - DoS/DDoS, Spoofing, Sniffing, Session Hijacking 공격 기법
+
+          ### 2.2 어플리케이션 보안
+          - 웹 해킹 기법 (SQL Injection, XSS, CSRF 등 OWASP Top 10)
+          - 데이터베이스 보안 (접근통제, 암호화)
+          - 전자상거래 보안 프로토콜 (SET, SSL/TLS)
+
+          ### 2.3 정보보안 일반
+          - 암호학 (대칭키, 공개키, 해시, 전자서명)
+          - 접근통제 모델 (MAC, DAC, RBAC)
+          - 사용자 인증 방식 (생체인식, OTP, Kerberos)
+
+          ### 2.4 정보보안 관리 및 법규
+          - 정보통신망법, 개인정보보호법, 정보통신기반보호법
+          - ISMS-P 인증 제도 및 관리체계 수립
+          - 위험 관리 분석 방법론
+
+          ---
+          *이 보고서는 GitHub Actions 워크플로우에 의해 자동 생성되었습니다.*
+          EOF
+
+          echo "Report generated at $FILE_NAME"
+
+      - name: Commit and Push Report
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git commit -m "Add Information Security Engineer Report (${{ env.TODAY }})"
+          git push
