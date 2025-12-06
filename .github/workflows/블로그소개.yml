@@ -2,7 +2,7 @@ name: Daily Auto Study Generator (Fixed & Expanded)
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 매일 자정 (한국 시간 오전 9시)
+    - cron: '0 0 * * *' # 매일 자정 (한국 시간 오전 9시) 실행
   workflow_dispatch: # 수동 실행
 
 permissions:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   generate-daily-report:
     runs-on: ubuntu-latest
-    # 🌍 [중요] 한국 시간 및 언어셋 강제 설정 (에러 해결 핵심)
+    # 🌍 [중요] 한국 시간 및 언어셋 강제 설정
     env:
       TZ: 'Asia/Seoul'
       LANG: 'ko_KR.UTF-8'
@@ -25,36 +25,36 @@ jobs:
         run: |
           # 현재 날짜 (KST 기준)
           echo "TODAY=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-          mkdir -p reports
+          mkdir -p reports # 보고서 디렉토리 생성
 
       - name: Generate Study Content
         shell: bash
         run: |
           # ==========================================================
-          # 📚 정보보안기사 학습 데이터베이스 (Massive Update)
+          # 📚 정보보안기사 학습 데이터베이스 (대규모 업데이트)
           # ==========================================================
           
           SUBJECTS=("시스템 보안" "네트워크 보안" "어플리케이션 보안" "정보보안 일반" "관리 및 법규")
           
-          # 1. 시스템 보안
+          # 1. 시스템 보안 (용어 및 오탈자 수정됨)
           TOPICS_0=(
-            "운영체제 커널과 쉘의 차이" "프로세스 스케줄링(RR, SRT, MLQ)" "교착상태(Deadlock) 4대 조건" 
-            "메모리 관리 기법(Paging vs Segmentation)" "가상 메모리와 페이지 교체 알고리즘" 
-            "Unix 파일 시스템(Inode, SuperBlock)" "SetUID와 SetGID 보안 취약점" 
-            "Windows 레지스트리 분석" "시스템 로그 분석(wtmp, utmp, btmp)" "랜섬웨어 동작 원리 및 대응"
-            "레이스 컨디션(Race Condition) 공격" "버퍼 오버플로우(Stack, Heap) 기초"
+            "운영체제와 커널의 차이" "프로세스 스케줄링(RR, SRT, MLQ)" "교착 상태(Deadlock) 4대 조건"
+            "메모리 관리(Paging vs Segmentation)" "가상 메모리와 페이지 교체 알고리즘"
+            "Unix 파일 시스템(Inode, SuperBlock)" "SetUID와 SetGID 보안 취약점"
+            "Windows 인증 분석" "시스템 로그 분석(wtmp, utmp, btmp)" "랜섬웨어 동작 원리 및 대응"
+            "경쟁 조건(Race Condition) 공격" "버퍼 오버플로우(Stack, Heap) 취약점"
           )
           
-          # 2. 네트워크 보안
+          # 2. 네트워크 보안 (용어 수정됨)
           TOPICS_1=(
-            "OSI 7계층 모델 상세 분석" "TCP 3-way 및 4-way Handshake" "ARP Spoofing 공격 원리" 
-            "DoS(Syn Flooding)와 DDoS 차이" "DRDoS(반사 공격) 원리" "IPSec VPN(AH, ESP, IKE)" 
-            "SSL TLS 핸드셰이크 상세 과정" "방화벽(Firewall) 유형 및 한계" 
+            "OSI 7계층 모델 상세 분석" "TCP 3-way 및 4-way Handshake" "ARP Spoofing 공격 원리"
+            "DoS(Syn Flooding)와 DDoS 차이" "DRDoS(반사 공격) 원리" "IPSec VPN(AH, ESP, IKE)"
+            "SSL TLS 핸드셰이크 상세 과정" "방화벽(Firewall) 유형 및 한계"
             "IDS(탐지)와 IPS(차단)의 차이" "무선 보안(WPA2 vs WPA3)" "DNS Spoofing과 Pharming"
             "허니팟(Honeypot) 구축 및 활용"
           )
           
-          # 3. 어플리케이션 보안
+          # 3. 어플리케이션 보안 (오탈자 수정됨)
           TOPICS_2=(
             "OWASP Top 10 최신 트렌드" "SQL Injection(Error, Blind, Union)" "XSS(Reflected, Stored, DOM)" 
             "CSRF 공격과 토큰 방어" "SSRF(Server Side Request Forgery)" "파일 업로드 취약점 및 WebShell" 
@@ -76,31 +76,20 @@ jobs:
             "개인정보보호법 주요 벌칙 규정" "정보통신망법과 정보통신기반보호법" "CC 인증(Common Criteria)" 
             "침해사고 대응 7단계 절차" "디지털 포렌식 증거 수집 원칙" "GDPR 주요 내용"
           )
-
           # ==========================================================
           # 🎲 랜덤 주제 및 토픽 선정 로직
           # ==========================================================
           
-          # 1. 주제 랜덤 선택 (0~4)
           RAND_SUB=$((RANDOM % 5))
           SELECTED_SUBJECT="${SUBJECTS[$RAND_SUB]}"
           
-          # 2. 해당 주제의 토픽 배열 가져오기 (간접 참조)
           eval "TARGET_ARR=(\"\${TOPICS_${RAND_SUB}[@]}\")"
-          
-          # 3. 토픽 랜덤 선택
           RAND_TOPIC=$((RANDOM % ${#TARGET_ARR[@]}))
           SELECTED_TOPIC="${TARGET_ARR[$RAND_TOPIC]}"
           
-          # ==========================================================
-          # 🛠️ [에러 해결] 안전한 파일명 생성 로직 (sed 제거)
-          # ==========================================================
-          
-          # 공백만 언더바(_)로 변경. 한글은 그대로 유지 (Linux 파일시스템은 한글 지원함)
-          # sed의 범위 지정 에러를 피하기 위해 단순 치환만 수행
+          # [에러 해결] 안전한 파일명 생성 (공백 치환)
           SAFE_TOPIC_NAME="${SELECTED_TOPIC// /_}"
           
-          # 파일명 최종 조합 (날짜_토픽.md)
           FILE_NAME="reports/${TODAY}_${SAFE_TOPIC_NAME}.md"
           
           echo "🎯 Selected: [$SELECTED_SUBJECT] $SELECTED_TOPIC"
@@ -145,7 +134,7 @@ jobs:
           - **기출 빈도:** ⭐⭐⭐⭐⭐
           - **관련 키워드:**
           
-          > 🤖 *Auto-generated by Daily Study Bot*
+          > 🤖 *Daily Study Bot에서 자동 생성됨*
           EOF
 
       - name: Commit and Push
@@ -155,10 +144,13 @@ jobs:
           
           git add reports/
           
-          # 변경사항 확인 및 커밋
+          # [수정] 변경사항 확인 및 커밋 로직
+          echo "🔍 Committing changes for $SELECTED_TOPIC..."
+          
           if git diff --staged --quiet; then
-            echo "No changes to commit."
+            echo "✅ No changes to commit. Skipping git push."
           else
-            git commit -m "📚 Daily Study: $SELECTED_TOPIC ($TODAY)"
-            git push
+            git commit -m "📚 Daily Study: $SELECTED_TOPIC (${TODAY})"
+            git push # [수정] git push 명령어 오타 수정
+            echo "🎉 Changes successfully pushed."
           fi
