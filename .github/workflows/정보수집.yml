@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: 📦 레포지토리 체크아웃
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # --- 🛠️ 모든 필수 디렉토리 및 파일 대량 생성 ---
       - name: 📁 프로젝트 파일 구조 및 리소스 대량 생성
@@ -123,7 +123,7 @@ jobs:
 
       # --- 🐍 Python 환경 설정 ---
       - name: 🐍 Python 3.11 설정
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -136,7 +136,7 @@ jobs:
 
       # --- ☕ Java/Spring Boot 환경 설정 ---
       - name: ☕ Java 17 및 Maven 설정
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -173,7 +173,7 @@ jobs:
 
       # --- 📤 빌드 결과물 업로드 ---
       - name: 📤 배포 패키지 업로드
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: server-deployment-package
           path: |
@@ -196,7 +196,7 @@ jobs:
 
     steps:
       - name: 📥 배포 패키지 다운로드
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: server-deployment-package
           path: ./deploy-package
@@ -238,14 +238,32 @@ jobs:
             echo "can_deploy=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # --- 💻 서버 배포 및 홈페이지 설치: SSH Key 방식 ---
-      - name: 💻 서버에 파일 배포 - SSH Key 방식
+      - name: 🔑 DEPLOY_KEY 임시 파일 생성 및 검증
+        id: deploy_key_file
+        if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY != ''
+        shell: bash
+        run: |
+          KEY_FILE="$RUNNER_TEMP/deploy_key"
+          printf '%s\n' "$DEPLOY_KEY" > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+
+          if ssh-keygen -y -f "$KEY_FILE" > /dev/null 2>&1; then
+            echo "✅ DEPLOY_KEY 개인키 형식 검증 완료"
+          else
+            echo "❌ DEPLOY_KEY 형식이 올바르지 않습니다. GitHub Secret에는 공개키가 아니라 개인키 전체 내용을 넣어야 합니다."
+            exit 1
+          fi
+
+          echo "key_path=$KEY_FILE" >> "$GITHUB_OUTPUT"
+
+      # --- 💻 서버 배포 및 홈페이지 설치: SSH Key 파일 방식 ---
+      - name: 💻 서버에 파일 배포 - SSH Key 파일 방식
         if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY != ''
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ env.DEPLOY_HOST }}
           username: ${{ env.DEPLOY_USER }}
-          key: ${{ env.DEPLOY_KEY }}
+          key_path: ${{ steps.deploy_key_file.outputs.key_path }}
           source: "./deploy-package/*"
           target: "/var/www/data-server/"
           overwrite: true
