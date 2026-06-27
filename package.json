@@ -1,0 +1,25 @@
+{
+  "name": "information-security-engineer-study",
+  "version": "1.0.0",
+  "description": "정보보안기사 공부 자료, 문제풀이, 오답노트, 정적 홈페이지 및 Node.js 서버",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "node server/test.js",
+    "serve:static": "npx http-server public -p 3000"
+  },
+  "keywords": [
+    "정보보안기사",
+    "information-security",
+    "security-exam",
+    "quiz",
+    "study"
+  ],
+  "author": "koreatest12",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {}
+}
