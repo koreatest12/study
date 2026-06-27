@@ -1,0 +1,32 @@
+[
+  {
+    "id": "system-security",
+    "name": "시스템 보안",
+    "description": "운영체제, 계정, 권한, 로그, 백업, 악성코드, 취약점 관리",
+    "keywords": ["Linux", "Windows", "권한", "로그", "백업", "악성코드"]
+  },
+  {
+    "id": "network-security",
+    "name": "네트워크 보안",
+    "description": "OSI 7계층, TCP/IP, 방화벽, IDS/IPS, VPN, 네트워크 공격",
+    "keywords": ["TCP/IP", "포트", "IDS", "IPS", "VPN", "DDoS"]
+  },
+  {
+    "id": "application-security",
+    "name": "어플리케이션 보안",
+    "description": "웹 취약점, DB 보안, 세션, 인증, API 보안, 시큐어 코딩",
+    "keywords": ["SQL Injection", "XSS", "CSRF", "세션", "파일 업로드"]
+  },
+  {
+    "id": "security-general",
+    "name": "정보보안 일반",
+    "description": "CIA, 암호학, 해시, 전자서명, PKI, 접근통제 모델",
+    "keywords": ["CIA", "AES", "RSA", "SHA", "PKI", "RBAC"]
+  },
+  {
+    "id": "management-law",
+    "name": "정보보안 관리 및 법규",
+    "description": "ISMS, 위험관리, 개인정보보호, 침해사고 대응, BCP/DRP",
+    "keywords": ["ISMS", "위험관리", "개인정보", "BCP", "DRP", "RTO"]
+  }
+]
