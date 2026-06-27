@@ -1,0 +1,155 @@
+[
+  {
+    "id": 1,
+    "subject": "system",
+    "subjectName": "시스템 보안",
+    "question": "리눅스에서 /tmp와 같은 공용 디렉터리에서 파일 소유자만 삭제할 수 있도록 제한하는 특수 권한은?",
+    "choices": ["SetUID", "SetGID", "Sticky Bit", "umask"],
+    "answer": 2,
+    "explanation": "Sticky Bit는 공용 디렉터리에서 파일 소유자 또는 관리자만 파일을 삭제할 수 있게 하는 권한이다."
+  },
+  {
+    "id": 2,
+    "subject": "system",
+    "subjectName": "시스템 보안",
+    "question": "리눅스에서 암호화된 패스워드 해시와 계정 만료 정보를 저장하는 파일은?",
+    "choices": ["/etc/passwd", "/etc/shadow", "/etc/hosts", "/etc/services"],
+    "answer": 1,
+    "explanation": "/etc/shadow는 암호화된 패스워드 해시와 계정 만료 정보를 저장한다."
+  },
+  {
+    "id": 3,
+    "subject": "system",
+    "subjectName": "시스템 보안",
+    "question": "새 파일이나 디렉터리 생성 시 기본 권한에서 제거할 권한을 지정하는 값은?",
+    "choices": ["chmod", "chown", "umask", "sudo"],
+    "answer": 2,
+    "explanation": "umask는 새 파일/디렉터리 생성 시 기본 권한 제한값이다."
+  },
+  {
+    "id": 4,
+    "subject": "system",
+    "subjectName": "시스템 보안",
+    "question": "최소 권한 원칙에 대한 설명으로 가장 적절한 것은?",
+    "choices": ["모든 사용자에게 관리자 권한을 부여한다.", "업무 수행에 필요한 최소 권한만 부여한다.", "로그 기록을 비활성화한다.", "공용 계정을 사용한다."],
+    "answer": 1,
+    "explanation": "최소 권한 원칙은 업무에 필요한 최소한의 권한만 부여하여 피해 범위를 줄이는 원칙이다."
+  },
+  {
+    "id": 5,
+    "subject": "network",
+    "subjectName": "네트워크 보안",
+    "question": "TCP 3-way handshake의 올바른 순서는?",
+    "choices": ["SYN → ACK → FIN", "SYN → SYN/ACK → ACK", "ACK → SYN → SYN/ACK", "FIN → ACK → SYN"],
+    "answer": 1,
+    "explanation": "TCP 연결 수립은 SYN, SYN/ACK, ACK 순서로 진행된다."
+  },
+  {
+    "id": 6,
+    "subject": "network",
+    "subjectName": "네트워크 보안",
+    "question": "HTTPS의 기본 포트 번호는?",
+    "choices": ["22", "53", "80", "443"],
+    "answer": 3,
+    "explanation": "HTTPS는 TCP 443 포트를 기본으로 사용한다."
+  },
+  {
+    "id": 7,
+    "subject": "network",
+    "subjectName": "네트워크 보안",
+    "question": "IPsec에서 NAT 환경을 통과하기 위해 사용하는 UDP 포트는?",
+    "choices": ["500", "4500", "3389", "161"],
+    "answer": 1,
+    "explanation": "NAT-T는 UDP 4500을 사용하여 IPsec ESP 패킷을 캡슐화한다."
+  },
+  {
+    "id": 8,
+    "subject": "network",
+    "subjectName": "네트워크 보안",
+    "question": "탐지뿐 아니라 차단까지 수행하는 보안 장비는?",
+    "choices": ["IDS", "IPS", "Hub", "Repeater"],
+    "answer": 1,
+    "explanation": "IDS는 탐지 중심이고 IPS는 탐지 후 차단까지 수행한다."
+  },
+  {
+    "id": 9,
+    "subject": "application",
+    "subjectName": "어플리케이션 보안",
+    "question": "SQL Injection 공격 방어에 가장 효과적인 방법은?",
+    "choices": ["Prepared Statement 사용", "오류 메시지 상세 출력", "관리자 권한 DB 계정 사용", "입력값을 SQL 문자열에 직접 연결"],
+    "answer": 0,
+    "explanation": "Prepared Statement는 SQL 구조와 입력값을 분리하여 SQL Injection을 방어한다."
+  },
+  {
+    "id": 10,
+    "subject": "application",
+    "subjectName": "어플리케이션 보안",
+    "question": "XSS 방어의 핵심 조치는?",
+    "choices": ["출력값 인코딩", "포트 차단", "세션 시간 무제한", "DB 관리자 권한 부여"],
+    "answer": 0,
+    "explanation": "XSS는 브라우저에서 스크립트가 실행되는 공격이므로 출력값 인코딩이 중요하다."
+  },
+  {
+    "id": 11,
+    "subject": "application",
+    "subjectName": "어플리케이션 보안",
+    "question": "사용자의 인증 상태를 악용해 원치 않는 요청을 전송하게 하는 공격은?",
+    "choices": ["SQL Injection", "XSS", "CSRF", "ARP Spoofing"],
+    "answer": 2,
+    "explanation": "CSRF는 사용자의 인증 상태를 악용해 공격자가 의도한 요청을 수행하게 하는 공격이다."
+  },
+  {
+    "id": 12,
+    "subject": "general",
+    "subjectName": "정보보안 일반",
+    "question": "정보보안의 3요소에 해당하지 않는 것은?",
+    "choices": ["기밀성", "무결성", "가용성", "효율성"],
+    "answer": 3,
+    "explanation": "정보보안의 3요소는 기밀성, 무결성, 가용성이다."
+  },
+  {
+    "id": 13,
+    "subject": "general",
+    "subjectName": "정보보안 일반",
+    "question": "전자서명 검증에 사용하는 키는?",
+    "choices": ["송신자의 개인키", "송신자의 공개키", "수신자의 개인키", "세션키"],
+    "answer": 1,
+    "explanation": "전자서명은 송신자의 개인키로 생성하고 송신자의 공개키로 검증한다."
+  },
+  {
+    "id": 14,
+    "subject": "general",
+    "subjectName": "정보보안 일반",
+    "question": "Bell-LaPadula 모델의 핵심 보호 목표는?",
+    "choices": ["기밀성", "무결성", "가용성", "책임추적성"],
+    "answer": 0,
+    "explanation": "Bell-LaPadula 모델은 기밀성 보호를 목적으로 한다."
+  },
+  {
+    "id": 15,
+    "subject": "management",
+    "subjectName": "정보보안 관리 및 법규",
+    "question": "ISMS 운영의 지속적 개선에 사용되는 순환 모델은?",
+    "choices": ["SWOT", "PDCA", "FIFO", "RAID"],
+    "answer": 1,
+    "explanation": "정보보호 관리체계는 Plan-Do-Check-Act 사이클을 통해 지속적으로 개선한다."
+  },
+  {
+    "id": 16,
+    "subject": "management",
+    "subjectName": "정보보안 관리 및 법규",
+    "question": "RTO의 의미로 가장 적절한 것은?",
+    "choices": ["복구 목표 시간", "복구 목표 시점", "암호 키 길이", "네트워크 전송률"],
+    "answer": 0,
+    "explanation": "RTO는 Recovery Time Objective로, 장애 발생 후 복구해야 하는 목표 시간을 의미한다."
+  },
+  {
+    "id": 17,
+    "subject": "management",
+    "subjectName": "정보보안 관리 및 법규",
+    "question": "개인정보는 목적 달성 후 원칙적으로 어떻게 처리해야 하는가?",
+    "choices": ["무기한 보관", "외부 공개", "지체 없이 파기", "임의 제3자 제공"],
+    "answer": 2,
+    "explanation": "개인정보는 목적 달성 후 법령상 보존 의무가 있는 경우를 제외하고 지체 없이 파기해야 한다."
+  }
+]
