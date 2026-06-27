@@ -1,0 +1,227 @@
+[
+  {
+    "id": "SYS-001",
+    "subject": "system-security",
+    "level": "basic",
+    "question": "리눅스에서 /tmp와 같은 공용 디렉터리에서 다른 사용자의 파일 삭제를 제한하는 특수 권한은?",
+    "options": ["SetUID", "SetGID", "Sticky Bit", "umask"],
+    "answer": 3,
+    "explanation": "Sticky Bit는 공용 디렉터리에서 파일 소유자 또는 관리자만 파일을 삭제할 수 있도록 제한한다."
+  },
+  {
+    "id": "SYS-002",
+    "subject": "system-security",
+    "level": "basic",
+    "question": "리눅스에서 새 파일 생성 시 기본 권한을 제한하는 값은?",
+    "options": ["chmod", "chown", "umask", "sudo"],
+    "answer": 3,
+    "explanation": "umask는 새 파일과 디렉터리 생성 시 기본 권한에서 제거할 권한을 지정한다."
+  },
+  {
+    "id": "SYS-003",
+    "subject": "system-security",
+    "level": "basic",
+    "question": "암호화된 패스워드 해시와 계정 만료 정보를 저장하는 리눅스 파일은?",
+    "options": ["/etc/passwd", "/etc/shadow", "/etc/hosts", "/etc/services"],
+    "answer": 2,
+    "explanation": "/etc/shadow에는 패스워드 해시, 계정 만료일, 패스워드 변경 주기 등이 저장된다."
+  },
+  {
+    "id": "SYS-004",
+    "subject": "system-security",
+    "level": "intermediate",
+    "question": "마지막 전체 백업 이후 변경된 모든 데이터를 백업하는 방식은?",
+    "options": ["전체 백업", "증분 백업", "차등 백업", "콜드 백업"],
+    "answer": 3,
+    "explanation": "차등 백업은 마지막 전체 백업 이후 변경된 데이터를 누적해 백업한다."
+  },
+  {
+    "id": "SYS-005",
+    "subject": "system-security",
+    "level": "intermediate",
+    "question": "최소 권한 원칙의 설명으로 가장 적절한 것은?",
+    "options": ["모든 사용자에게 관리자 권한을 부여한다", "업무 수행에 필요한 최소 권한만 부여한다", "로그 기록을 중지한다", "공용 계정 사용을 권장한다"],
+    "answer": 2,
+    "explanation": "최소 권한 원칙은 권한 오남용과 침해 사고 피해 범위를 줄이기 위해 필요한 권한만 부여하는 원칙이다."
+  },
+  {
+    "id": "NET-001",
+    "subject": "network-security",
+    "level": "basic",
+    "question": "TCP 3-way handshake의 올바른 순서는?",
+    "options": ["SYN → ACK → FIN", "SYN → SYN/ACK → ACK", "ACK → SYN → SYN/ACK", "FIN → ACK → SYN"],
+    "answer": 2,
+    "explanation": "TCP 연결 수립은 SYN, SYN/ACK, ACK 순서로 진행된다."
+  },
+  {
+    "id": "NET-002",
+    "subject": "network-security",
+    "level": "basic",
+    "question": "HTTP와 HTTPS의 기본 포트 조합으로 올바른 것은?",
+    "options": ["22 / 23", "53 / 110", "80 / 443", "500 / 4500"],
+    "answer": 3,
+    "explanation": "HTTP는 TCP 80, HTTPS는 TCP 443을 기본 포트로 사용한다."
+  },
+  {
+    "id": "NET-003",
+    "subject": "network-security",
+    "level": "intermediate",
+    "question": "침입 탐지뿐 아니라 차단 기능까지 수행하는 장비는?",
+    "options": ["IDS", "IPS", "Hub", "Repeater"],
+    "answer": 2,
+    "explanation": "IDS는 탐지와 경고가 중심이고, IPS는 탐지 후 차단까지 수행한다."
+  },
+  {
+    "id": "NET-004",
+    "subject": "network-security",
+    "level": "intermediate",
+    "question": "NAT 환경에서 IPsec ESP 패킷을 UDP로 캡슐화하는 기술은?",
+    "options": ["SSH", "NAT-T", "ARP", "ICMP"],
+    "answer": 2,
+    "explanation": "NAT-T는 IPsec 패킷을 UDP 4500으로 캡슐화해 NAT 환경에서도 통신 가능하게 한다."
+  },
+  {
+    "id": "NET-005",
+    "subject": "network-security",
+    "level": "advanced",
+    "question": "ARP Spoofing 공격의 주요 목적은?",
+    "options": ["MAC/IP 매핑을 속여 트래픽을 가로챈다", "SQL 구문을 조작한다", "파일 권한을 변경한다", "DNS 서버를 패치한다"],
+    "answer": 1,
+    "explanation": "ARP Spoofing은 MAC 주소와 IP 주소 매핑을 속여 중간자 공격을 수행할 수 있다."
+  },
+  {
+    "id": "APP-001",
+    "subject": "application-security",
+    "level": "basic",
+    "question": "SQL Injection 방어에 가장 효과적인 방법은?",
+    "options": ["Prepared Statement 사용", "오류 메시지 상세 출력", "관리자 권한 DB 계정 사용", "입력값을 SQL에 직접 연결"],
+    "answer": 1,
+    "explanation": "Prepared Statement는 SQL 구조와 입력값을 분리해 SQL 구문 조작을 방지한다."
+  },
+  {
+    "id": "APP-002",
+    "subject": "application-security",
+    "level": "basic",
+    "question": "XSS 방어의 핵심 조치는?",
+    "options": ["출력값 인코딩", "포트 차단", "세션 시간 무제한", "DB 관리자 권한 부여"],
+    "answer": 1,
+    "explanation": "XSS는 브라우저에서 스크립트가 실행되는 공격이므로 출력값 인코딩이 중요하다."
+  },
+  {
+    "id": "APP-003",
+    "subject": "application-security",
+    "level": "intermediate",
+    "question": "사용자의 인증 상태를 악용해 원치 않는 요청을 보내게 하는 공격은?",
+    "options": ["XSS", "CSRF", "SQL Injection", "Directory Traversal"],
+    "answer": 2,
+    "explanation": "CSRF는 로그인된 사용자의 인증 상태를 악용해 공격자가 의도한 요청을 수행하게 한다."
+  },
+  {
+    "id": "APP-004",
+    "subject": "application-security",
+    "level": "intermediate",
+    "question": "로그인 후 세션 ID를 새로 발급하는 주요 목적은?",
+    "options": ["세션 고정 공격 방지", "DNS 스푸핑 방지", "DDoS 방지", "포트 스캔 방지"],
+    "answer": 1,
+    "explanation": "로그인 후 세션 ID를 재발급하면 공격자가 미리 지정한 세션 ID를 악용하는 세션 고정 공격을 방지할 수 있다."
+  },
+  {
+    "id": "APP-005",
+    "subject": "application-security",
+    "level": "advanced",
+    "question": "파일 업로드 취약점 대응으로 부적절한 것은?",
+    "options": ["확장자 검증", "MIME 타입 검증", "업로드 디렉터리 실행 권한 제거", "업로드 파일을 웹 루트에서 바로 실행 가능하게 설정"],
+    "answer": 4,
+    "explanation": "업로드 파일이 웹 루트에서 바로 실행되면 웹쉘 공격으로 이어질 수 있다."
+  },
+  {
+    "id": "GEN-001",
+    "subject": "security-general",
+    "level": "basic",
+    "question": "정보보안의 3요소가 아닌 것은?",
+    "options": ["기밀성", "무결성", "가용성", "효율성"],
+    "answer": 4,
+    "explanation": "정보보안의 3요소는 기밀성, 무결성, 가용성이다."
+  },
+  {
+    "id": "GEN-002",
+    "subject": "security-general",
+    "level": "basic",
+    "question": "해시 함수의 주된 목적은?",
+    "options": ["기밀성 제공", "무결성 검증", "부팅 속도 향상", "라우팅 최적화"],
+    "answer": 2,
+    "explanation": "해시 함수는 데이터 변경 여부를 확인하는 무결성 검증에 주로 사용된다."
+  },
+  {
+    "id": "GEN-003",
+    "subject": "security-general",
+    "level": "intermediate",
+    "question": "전자서명 검증에 사용하는 키는?",
+    "options": ["송신자의 개인키", "송신자의 공개키", "수신자의 개인키", "세션키"],
+    "answer": 2,
+    "explanation": "전자서명은 송신자의 개인키로 생성하고 송신자의 공개키로 검증한다."
+  },
+  {
+    "id": "GEN-004",
+    "subject": "security-general",
+    "level": "intermediate",
+    "question": "Bell-LaPadula 모델의 핵심 보호 대상은?",
+    "options": ["기밀성", "무결성", "가용성", "책임추적성"],
+    "answer": 1,
+    "explanation": "Bell-LaPadula는 기밀성 중심 보안 모델이다."
+  },
+  {
+    "id": "GEN-005",
+    "subject": "security-general",
+    "level": "advanced",
+    "question": "Biba 모델의 핵심 목적은?",
+    "options": ["기밀성 보호", "무결성 보호", "가용성 향상", "장애 복구"],
+    "answer": 2,
+    "explanation": "Biba 모델은 무결성 보호를 목적으로 한다."
+  },
+  {
+    "id": "LAW-001",
+    "subject": "management-law",
+    "level": "basic",
+    "question": "ISMS 운영의 지속적 개선에 사용되는 순환 모델은?",
+    "options": ["SWOT", "PDCA", "FIFO", "RAID"],
+    "answer": 2,
+    "explanation": "ISMS는 Plan, Do, Check, Act 사이클을 통해 지속적으로 개선한다."
+  },
+  {
+    "id": "LAW-002",
+    "subject": "management-law",
+    "level": "basic",
+    "question": "위험관리에서 위험을 구성하는 대표 요소는?",
+    "options": ["자산, 위협, 취약점", "CPU, 메모리, 디스크", "사용자, 브라우저, 프린터", "시간, 비용, 거리"],
+    "answer": 1,
+    "explanation": "위험은 자산, 위협, 취약점의 관계에서 평가한다."
+  },
+  {
+    "id": "LAW-003",
+    "subject": "management-law",
+    "level": "intermediate",
+    "question": "BCP의 의미로 가장 적절한 것은?",
+    "options": ["업무 연속성 계획", "백업 압축 정책", "브라우저 캐시 보호", "네트워크 포트 차단"],
+    "answer": 1,
+    "explanation": "BCP는 Business Continuity Plan으로 장애나 재해에도 핵심 업무를 지속하기 위한 계획이다."
+  },
+  {
+    "id": "LAW-004",
+    "subject": "management-law",
+    "level": "intermediate",
+    "question": "RTO의 의미는?",
+    "options": ["복구 목표 시간", "복구 목표 시점", "암호 키 길이", "네트워크 전송률"],
+    "answer": 1,
+    "explanation": "RTO는 장애 발생 후 서비스를 복구해야 하는 목표 시간을 의미한다."
+  },
+  {
+    "id": "LAW-005",
+    "subject": "management-law",
+    "level": "advanced",
+    "question": "개인정보 처리 원칙으로 부적절한 것은?",
+    "options": ["목적에 필요한 최소한의 개인정보 수집", "목적 달성 후 지체 없이 파기", "동의 없이 무제한 제3자 제공", "안전성 확보 조치 수행"],
+    "answer": 3,
+    "explanation": "개인정보는 원칙적으로 정보주체의 동의나 법적 근거 없이 제3자에게 제공할 수 없다."
+  }
+]
