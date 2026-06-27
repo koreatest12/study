@@ -1,0 +1,36 @@
+name: Security Study Platform CI
+
+on:
+  push:
+    paths:
+      - 'security-study-platform/**'
+      - '.github/workflows/security-study-platform-ci.yml'
+  pull_request:
+    paths:
+      - 'security-study-platform/**'
+      - '.github/workflows/security-study-platform-ci.yml'
+
+jobs:
+  validate-platform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: security-study-platform
+        run: npm install
+
+      - name: Validate JSON data
+        working-directory: security-study-platform
+        run: node -e "JSON.parse(require('fs').readFileSync('./data/questions.json','utf8')); console.log('questions.json valid')"
+
+      - name: Load server module
+        working-directory: security-study-platform
+        run: npm test
