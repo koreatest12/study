@@ -1,124 +1,57 @@
 name: "CodeQL Advanced"
 
 on:
-  push:
-    branches:
-      - "main"
+push:
+branches:
+- "main"
 
-  pull_request:
-    branches:
-      - "main"
+pull_request:
+branches:
+- "main"
 
-  schedule:
-    # 매주 토요일 05:24 UTC 실행
-    # 한국시간 기준 토요일 14:24 실행
-    - cron: "24 5 * * 6"
+schedule:
+# 매주 토요일 05:24 UTC 실행
+# 한국시간 기준 토요일 14:24 실행
+- cron: "24 5 * * 6"
 
-  workflow_dispatch:
+workflow_dispatch:
 
 jobs:
-  analyze:
-    name: "CodeQL Analyze (${{ matrix.language }})"
+analyze:
+name: "CodeQL Analyze - ${{ matrix.language }}"
 
-    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}
+```
+runs-on: ubuntu-latest
 
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
+permissions:
+  security-events: write
+  packages: read
+  actions: read
+  contents: read
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # GitHub Actions 워크플로우 보안 분석
-          - language: actions
-            build-mode: none
+strategy:
+  fail-fast: false
+  matrix:
+    include:
+      - language: actions
+        build-mode: none
 
-          # JavaScript / TypeScript / Node.js / React / Vue / Next.js 분석
-          - language: javascript-typescript
-            build-mode: none
+      - language: javascript-typescript
+        build-mode: none
 
-          # Python 코드가 있으면 아래 항목을 활성화하세요.
-          # - language: python
-          #   build-mode: none
+steps:
+  - name: "Checkout repository"
+    uses: actions/checkout@v4
 
-          # Java / Kotlin 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # Java만 있으면 none 가능, Kotlin 포함 시 autobuild 또는 manual 권장
-          # - language: java-kotlin
-          #   build-mode: autobuild
+  - name: "Initialize CodeQL"
+    uses: github/codeql-action/init@v4
+    with:
+      languages: ${{ matrix.language }}
+      build-mode: ${{ matrix.build-mode }}
+      queries: +security-extended,security-and-quality
 
-          # C / C++ 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # - language: c-cpp
-          #   build-mode: autobuild
-
-          # C# 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # - language: csharp
-          #   build-mode: autobuild
-
-          # Go 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # - language: go
-          #   build-mode: autobuild
-
-          # Ruby 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # - language: ruby
-          #   build-mode: none
-
-          # Rust 프로젝트가 있으면 아래 항목을 활성화하세요.
-          # - language: rust
-          #   build-mode: autobuild
-
-          # Swift 프로젝트가 있으면 macOS runner 사용
-          # - language: swift
-          #   build-mode: autobuild
-
-    steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@v4
-
-      # Node.js 프로젝트일 경우 의존성 설치가 필요하면 활성화하세요.
-      # CodeQL build-mode: none 에서는 필수는 아니지만,
-      # 일부 프레임워크/빌드 기반 분석 정확도를 높이고 싶을 때 사용할 수 있습니다.
-      # - name: "Setup Node.js"
-      #   if: matrix.language == 'javascript-typescript'
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: "22"
-      #     cache: "npm"
-
-      # - name: "Install dependencies"
-      #   if: matrix.language == 'javascript-typescript'
-      #   run: npm ci
-
-      - name: "Initialize CodeQL"
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-
-          # 기본 보안 쿼리 + 확장 보안 쿼리 + 품질 쿼리 실행
-          queries: +security-extended,security-and-quality
-
-      # build-mode가 autobuild인 컴파일 언어용 자동 빌드
-      - name: "Autobuild"
-        if: matrix.build-mode == 'autobuild'
-        uses: github/codeql-action/autobuild@v4
-
-      # build-mode가 manual일 때 직접 빌드 명령어 작성
-      - name: "Run manual build steps"
-        if: matrix.build-mode == 'manual'
-        shell: bash
-        run: |
-          echo "manual build-mode가 설정된 언어는 여기에서 실제 빌드 명령어를 작성해야 합니다."
-          echo "예시:"
-          echo "  npm ci && npm run build"
-          echo "  mvn clean package"
-          echo "  gradle build"
-          echo "  make"
-          exit 1
-
-      - name: "Perform CodeQL Analysis"
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:${{ matrix.language }}"
+  - name: "Perform CodeQL Analysis"
+    uses: github/codeql-action/analyze@v4
+    with:
+      category: "/language:${{ matrix.language }}"
+```
