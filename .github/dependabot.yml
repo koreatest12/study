@@ -1,0 +1,53 @@
+version: 2
+
+# Dependabot 설정 파일입니다.
+# 주의: 이 파일은 .github/dependabot.yml 위치에 있어야 합니다.
+# .github/workflows/dependabot.yml에 두면 GitHub Actions 워크플로우로 인식되어 오류가 발생합니다.
+
+updates:
+  # 1. GitHub Actions 의존성 관리
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # 2. JavaScript / Node.js 의존성 관리
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
+    open-pull-requests-limit: 10
+    groups:
+      npm-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "npm"
+
+  # 3. Python pip 의존성 관리
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "main"
+    open-pull-requests-limit: 5
+    groups:
+      pip-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    labels:
+      - "dependencies"
+      - "python"
