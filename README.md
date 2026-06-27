@@ -6,14 +6,14 @@
 ![Level](https://img.shields.io/badge/Level-Lv.5_Master-red?style=for-the-badge)
 
 > 💡 **Today's Security Term:**
-> **SQL Injection: 입력값 검증 실패로 발생하는 DB 해킹 기법.**
+> **APT: 지능형 지속 위협, 특정 목표를 정해 장기간 공격하는 기법.**
 
 ---
 
 ## 📂 학습 현황 (Study Dashboard)
 
 **Current Level Progress:**
-`▓▓▓▓▓▓▓▓▓▓` (Total Reports: **209**)
+`▓▓▓▓▓▓▓▓▓▓` (Total Reports: **210**)
 
 
 ### 📚 학습 커리큘럼 (상세 보기)
@@ -63,10 +63,9 @@
 ## 📑 학습 리포트 목록 (Reports)
 | 날짜 | 리포트 제목 | 상태 |
 |:---:|:---|:---:|
-| 2026-05-27 | [2026-05-27_XSS(Reflected,_Stored,_DOM).md](reports/2026-05-27_XSS(Reflected,_Stored,_DOM).md) | ✅ Verified |
-| 2026-05-28 | [2026-05-28_ARP_Spoofing_공격_원리.md](reports/2026-05-28_ARP_Spoofing_공격_원리.md) | ✅ Verified |
-| 2026-05-29 | [2026-05-29_OSI_7계층_모델_상세_분석.md](reports/2026-05-29_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
-| 2026-05-30 | [2026-05-30_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-05-30_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
+| 2026-06-27 | [2026-06-27_정보보안기사_예상문제_오답노트.md](reports/2026-06-27_정보보안기사_예상문제_오답노트.md) | ✅ Verified |
+| 2025-12-06 | [OS_Architecture_Report_2025-12-06.md](reports/OS_Architecture_Report_2025-12-06.md) | ✅ Verified |
+| 2025-12-06 | [Security_Exam_Report_2025-12-06.md](reports/Security_Exam_Report_2025-12-06.md) | ✅ Verified |
 | 2026-05-31 | [2026-05-31_IDS(탐지)와_IPS(차단)의_차이.md](reports/2026-05-31_IDS(탐지)와_IPS(차단)의_차이.md) | ✅ Verified |
 | 2026-06-01 | [2026-06-01_정보통신망법과_정보통신기반보호법.md](reports/2026-06-01_정보통신망법과_정보통신기반보호법.md) | ✅ Verified |
 | 2026-06-02 | [2026-06-02_디지털_포렌식_증거_수집_원칙.md](reports/2026-06-02_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
@@ -96,16 +95,6 @@
 | 2026-06-26 | [2026-06-26_침해사고_대응_7단계_절차.md](reports/2026-06-26_침해사고_대응_7단계_절차.md) | ✅ Verified |
 | 2026-06-27 | [2026-06-27_PKI(공개키_기반_구조)_구성요소.md](reports/2026-06-27_PKI(공개키_기반_구조)_구성요소.md) | ✅ Verified |
 | 2026-06-27 | [2026-06-27_정보보안기사_과목별_공부자료.md](reports/2026-06-27_정보보안기사_과목별_공부자료.md) | ✅ Verified |
-| 2025-12-06 | [OS_Architecture_Report_2025-12-06.md](reports/OS_Architecture_Report_2025-12-06.md) | ✅ Verified |
-| 2025-12-06 | [Security_Exam_Report_2025-12-06.md](reports/Security_Exam_Report_2025-12-06.md) | ✅ Verified |
-| 2026-04-21 | [2026-04-21_디지털_포렌식_증거_수집_원칙.md](reports/2026-04-21_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
-| 2026-04-22 | [2026-04-22_위험_관리(Risk_Management)_방법론.md](reports/2026-04-22_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
-| 2026-04-23 | [2026-04-23_TCP_3-way_및_4-way_Handshake.md](reports/2026-04-23_TCP_3-way_및_4-way_Handshake.md) | ✅ Verified |
-| 2026-04-24 | [2026-04-24_SSRF(Server_Side_Request_Forgery).md](reports/2026-04-24_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
-| 2026-04-25 | [2026-04-25_IPSec_VPN(AH,_ESP,_IKE).md](reports/2026-04-25_IPSec_VPN(AH,_ESP,_IKE).md) | ✅ Verified |
-| 2026-04-26 | [2026-04-26_스테가노그래피(Steganography).md](reports/2026-04-26_스테가노그래피(Steganography).md) | ✅ Verified |
-| 2026-04-27 | [2026-04-27_위험_관리(Risk_Management)_방법론.md](reports/2026-04-27_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
-| 2026-04-28 | [2026-04-28_해시_함수(SHA-256)와_무결성_검증.md](reports/2026-04-28_해시_함수(SHA-256)와_무결성_검증.md) | ✅ Verified |
 | 2026-04-29 | [2026-04-29_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-04-29_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
 | 2026-04-30 | [2026-04-30_DoS(Syn_Flooding)와_DDoS_차이.md](reports/2026-04-30_DoS(Syn_Flooding)와_DDoS_차이.md) | ✅ Verified |
 | 2026-05-01 | [2026-05-01_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-05-01_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
@@ -134,6 +123,47 @@
 | 2026-05-24 | [2026-05-24_공개키_암호화(RSA,_ECC).md](reports/2026-05-24_공개키_암호화(RSA,_ECC).md) | ✅ Verified |
 | 2026-05-25 | [2026-05-25_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-05-25_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
 | 2026-05-26 | [2026-05-26_스테가노그래피(Steganography).md](reports/2026-05-26_스테가노그래피(Steganography).md) | ✅ Verified |
+| 2026-05-27 | [2026-05-27_XSS(Reflected,_Stored,_DOM).md](reports/2026-05-27_XSS(Reflected,_Stored,_DOM).md) | ✅ Verified |
+| 2026-05-28 | [2026-05-28_ARP_Spoofing_공격_원리.md](reports/2026-05-28_ARP_Spoofing_공격_원리.md) | ✅ Verified |
+| 2026-05-29 | [2026-05-29_OSI_7계층_모델_상세_분석.md](reports/2026-05-29_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
+| 2026-05-30 | [2026-05-30_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-05-30_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
+| 2026-04-02 | [2026-04-02_CSRF_공격과_토큰_방어.md](reports/2026-04-02_CSRF_공격과_토큰_방어.md) | ✅ Verified |
+| 2026-04-03 | [2026-04-03_보안의_3요소(CIA)와_AAA.md](reports/2026-04-03_보안의_3요소(CIA)와_AAA.md) | ✅ Verified |
+| 2026-04-04 | [2026-04-04_SQL_Injection(Error,_Blind,_Union).md](reports/2026-04-04_SQL_Injection(Error,_Blind,_Union).md) | ✅ Verified |
+| 2026-04-05 | [2026-04-05_XSS(Reflected,_Stored,_DOM).md](reports/2026-04-05_XSS(Reflected,_Stored,_DOM).md) | ✅ Verified |
+| 2026-04-06 | [2026-04-06_Windows_인증_분석.md](reports/2026-04-06_Windows_인증_분석.md) | ✅ Verified |
+| 2026-04-07 | [2026-04-07_GDPR_주요_내용.md](reports/2026-04-07_GDPR_주요_내용.md) | ✅ Verified |
+| 2026-04-08 | [2026-04-08_프로세스_스케줄링(RR,_SRT,_MLQ).md](reports/2026-04-08_프로세스_스케줄링(RR,_SRT,_MLQ).md) | ✅ Verified |
+| 2026-04-09 | [2026-04-09_GDPR_주요_내용.md](reports/2026-04-09_GDPR_주요_내용.md) | ✅ Verified |
+| 2026-04-10 | [2026-04-10_OSI_7계층_모델_상세_분석.md](reports/2026-04-10_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
+| 2026-04-11 | [2026-04-11_ISMS-P_인증_심사_기준.md](reports/2026-04-11_ISMS-P_인증_심사_기준.md) | ✅ Verified |
+| 2026-04-12 | [2026-04-12_PKI(공개키_기반_구조)_구성요소.md](reports/2026-04-12_PKI(공개키_기반_구조)_구성요소.md) | ✅ Verified |
+| 2026-04-13 | [2026-04-13_정보통신망법과_정보통신기반보호법.md](reports/2026-04-13_정보통신망법과_정보통신기반보호법.md) | ✅ Verified |
+| 2026-04-14 | [2026-04-14_ISMS-P_인증_심사_기준.md](reports/2026-04-14_ISMS-P_인증_심사_기준.md) | ✅ Verified |
+| 2026-04-15 | [2026-04-15_SSL_TLS_핸드셰이크_상세_과정.md](reports/2026-04-15_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
+| 2026-04-16 | [2026-04-16_경쟁_조건(Race_Condition)_공격.md](reports/2026-04-16_경쟁_조건(Race_Condition)_공격.md) | ✅ Verified |
+| 2026-04-17 | [2026-04-17_개인정보보호법_주요_벌칙_규정.md](reports/2026-04-17_개인정보보호법_주요_벌칙_규정.md) | ✅ Verified |
+| 2026-04-18 | [2026-04-18_DRDoS(반사_공격)_원리.md](reports/2026-04-18_DRDoS(반사_공격)_원리.md) | ✅ Verified |
+| 2026-04-19 | [2026-04-19_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-04-19_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
+| 2026-04-20 | [2026-04-20_대칭키_암호화(AES,_DES,_SEED).md](reports/2026-04-20_대칭키_암호화(AES,_DES,_SEED).md) | ✅ Verified |
+| 2026-04-21 | [2026-04-21_디지털_포렌식_증거_수집_원칙.md](reports/2026-04-21_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
+| 2026-04-22 | [2026-04-22_위험_관리(Risk_Management)_방법론.md](reports/2026-04-22_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
+| 2026-04-23 | [2026-04-23_TCP_3-way_및_4-way_Handshake.md](reports/2026-04-23_TCP_3-way_및_4-way_Handshake.md) | ✅ Verified |
+| 2026-04-24 | [2026-04-24_SSRF(Server_Side_Request_Forgery).md](reports/2026-04-24_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
+| 2026-04-25 | [2026-04-25_IPSec_VPN(AH,_ESP,_IKE).md](reports/2026-04-25_IPSec_VPN(AH,_ESP,_IKE).md) | ✅ Verified |
+| 2026-04-26 | [2026-04-26_스테가노그래피(Steganography).md](reports/2026-04-26_스테가노그래피(Steganography).md) | ✅ Verified |
+| 2026-04-27 | [2026-04-27_위험_관리(Risk_Management)_방법론.md](reports/2026-04-27_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
+| 2026-04-28 | [2026-04-28_해시_함수(SHA-256)와_무결성_검증.md](reports/2026-04-28_해시_함수(SHA-256)와_무결성_검증.md) | ✅ Verified |
+| 2026-03-02 | [2026-03-02_사용자_인증(Biometrics,_OTP,_Kerberos).md](reports/2026-03-02_사용자_인증(Biometrics,_OTP,_Kerberos).md) | ✅ Verified |
+| 2026-03-03 | [2026-03-03_개인정보보호법_주요_벌칙_규정.md](reports/2026-03-03_개인정보보호법_주요_벌칙_규정.md) | ✅ Verified |
+| 2026-03-04 | [2026-03-04_Unix_파일_시스템(Inode,_SuperBlock).md](reports/2026-03-04_Unix_파일_시스템(Inode,_SuperBlock).md) | ✅ Verified |
+| 2026-03-05 | [2026-03-05_정보통신망법과_정보통신기반보호법.md](reports/2026-03-05_정보통신망법과_정보통신기반보호법.md) | ✅ Verified |
+| 2026-03-06 | [2026-03-06_가상_메모리와_페이지_교체_알고리즘.md](reports/2026-03-06_가상_메모리와_페이지_교체_알고리즘.md) | ✅ Verified |
+| 2026-03-07 | [2026-03-07_디지털_포렌식_증거_수집_원칙.md](reports/2026-03-07_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
+| 2026-03-08 | [2026-03-08_GDPR_주요_내용.md](reports/2026-03-08_GDPR_주요_내용.md) | ✅ Verified |
+| 2026-03-09 | [2026-03-09_웹_방화벽(WAF)의_역할.md](reports/2026-03-09_웹_방화벽(WAF)의_역할.md) | ✅ Verified |
+| 2026-03-10 | [2026-03-10_GDPR_주요_내용.md](reports/2026-03-10_GDPR_주요_내용.md) | ✅ Verified |
+| 2026-03-11 | [2026-03-11_메모리_관리(Paging_vs_Segmentation).md](reports/2026-03-11_메모리_관리(Paging_vs_Segmentation).md) | ✅ Verified |
 | 2026-03-12 | [2026-03-12_SSRF(Server_Side_Request_Forgery).md](reports/2026-03-12_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
 | 2026-03-13 | [2026-03-13_디렉토리_트래버설(Path_Traversal).md](reports/2026-03-13_디렉토리_트래버설(Path_Traversal).md) | ✅ Verified |
 | 2026-03-14 | [2026-03-14_CC_인증(Common_Criteria).md](reports/2026-03-14_CC_인증(Common_Criteria).md) | ✅ Verified |
@@ -155,28 +185,6 @@
 | 2026-03-30 | [2026-03-30_보안의_3요소(CIA)와_AAA.md](reports/2026-03-30_보안의_3요소(CIA)와_AAA.md) | ✅ Verified |
 | 2026-03-31 | [2026-03-31_공개키_암호화(RSA,_ECC).md](reports/2026-03-31_공개키_암호화(RSA,_ECC).md) | ✅ Verified |
 | 2026-04-01 | [2026-04-01_디지털_포렌식_증거_수집_원칙.md](reports/2026-04-01_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
-| 2026-04-02 | [2026-04-02_CSRF_공격과_토큰_방어.md](reports/2026-04-02_CSRF_공격과_토큰_방어.md) | ✅ Verified |
-| 2026-04-03 | [2026-04-03_보안의_3요소(CIA)와_AAA.md](reports/2026-04-03_보안의_3요소(CIA)와_AAA.md) | ✅ Verified |
-| 2026-04-04 | [2026-04-04_SQL_Injection(Error,_Blind,_Union).md](reports/2026-04-04_SQL_Injection(Error,_Blind,_Union).md) | ✅ Verified |
-| 2026-04-05 | [2026-04-05_XSS(Reflected,_Stored,_DOM).md](reports/2026-04-05_XSS(Reflected,_Stored,_DOM).md) | ✅ Verified |
-| 2026-04-06 | [2026-04-06_Windows_인증_분석.md](reports/2026-04-06_Windows_인증_분석.md) | ✅ Verified |
-| 2026-04-07 | [2026-04-07_GDPR_주요_내용.md](reports/2026-04-07_GDPR_주요_내용.md) | ✅ Verified |
-| 2026-04-08 | [2026-04-08_프로세스_스케줄링(RR,_SRT,_MLQ).md](reports/2026-04-08_프로세스_스케줄링(RR,_SRT,_MLQ).md) | ✅ Verified |
-| 2026-04-09 | [2026-04-09_GDPR_주요_내용.md](reports/2026-04-09_GDPR_주요_내용.md) | ✅ Verified |
-| 2026-04-10 | [2026-04-10_OSI_7계층_모델_상세_분석.md](reports/2026-04-10_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
-| 2026-04-11 | [2026-04-11_ISMS-P_인증_심사_기준.md](reports/2026-04-11_ISMS-P_인증_심사_기준.md) | ✅ Verified |
-| 2026-04-12 | [2026-04-12_PKI(공개키_기반_구조)_구성요소.md](reports/2026-04-12_PKI(공개키_기반_구조)_구성요소.md) | ✅ Verified |
-| 2026-04-13 | [2026-04-13_정보통신망법과_정보통신기반보호법.md](reports/2026-04-13_정보통신망법과_정보통신기반보호법.md) | ✅ Verified |
-| 2026-04-14 | [2026-04-14_ISMS-P_인증_심사_기준.md](reports/2026-04-14_ISMS-P_인증_심사_기준.md) | ✅ Verified |
-| 2026-04-15 | [2026-04-15_SSL_TLS_핸드셰이크_상세_과정.md](reports/2026-04-15_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
-| 2026-04-16 | [2026-04-16_경쟁_조건(Race_Condition)_공격.md](reports/2026-04-16_경쟁_조건(Race_Condition)_공격.md) | ✅ Verified |
-| 2026-04-17 | [2026-04-17_개인정보보호법_주요_벌칙_규정.md](reports/2026-04-17_개인정보보호법_주요_벌칙_규정.md) | ✅ Verified |
-| 2026-04-18 | [2026-04-18_DRDoS(반사_공격)_원리.md](reports/2026-04-18_DRDoS(반사_공격)_원리.md) | ✅ Verified |
-| 2026-04-19 | [2026-04-19_BCP(업무연속성)와_DRP(재해복구).md](reports/2026-04-19_BCP(업무연속성)와_DRP(재해복구).md) | ✅ Verified |
-| 2026-04-20 | [2026-04-20_대칭키_암호화(AES,_DES,_SEED).md](reports/2026-04-20_대칭키_암호화(AES,_DES,_SEED).md) | ✅ Verified |
-| 2026-01-29 | [2026-01-29_SSL_TLS_핸드셰이크_상세_과정.md](reports/2026-01-29_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
-| 2026-01-30 | [2026-01-30_위험_관리(Risk_Management)_방법론.md](reports/2026-01-30_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
-| 2026-01-31 | [2026-01-31_스테가노그래피(Steganography).md](reports/2026-01-31_스테가노그래피(Steganography).md) | ✅ Verified |
 | 2026-02-01 | [2026-02-01_대칭키_암호화(AES,_DES,_SEED).md](reports/2026-02-01_대칭키_암호화(AES,_DES,_SEED).md) | ✅ Verified |
 | 2026-02-02 | [2026-02-02_해시_함수(SHA-256)와_무결성_검증.md](reports/2026-02-02_해시_함수(SHA-256)와_무결성_검증.md) | ✅ Verified |
 | 2026-02-03 | [2026-02-03_DNS_Spoofing과_Pharming.md](reports/2026-02-03_DNS_Spoofing과_Pharming.md) | ✅ Verified |
@@ -205,16 +213,17 @@
 | 2026-02-26 | [2026-02-26_XSS(Reflected,_Stored,_DOM).md](reports/2026-02-26_XSS(Reflected,_Stored,_DOM).md) | ✅ Verified |
 | 2026-02-28 | [2026-02-28_CC_인증(Common_Criteria).md](reports/2026-02-28_CC_인증(Common_Criteria).md) | ✅ Verified |
 | 2026-03-01 | [2026-03-01_OSI_7계층_모델_상세_분석.md](reports/2026-03-01_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
-| 2026-03-02 | [2026-03-02_사용자_인증(Biometrics,_OTP,_Kerberos).md](reports/2026-03-02_사용자_인증(Biometrics,_OTP,_Kerberos).md) | ✅ Verified |
-| 2026-03-03 | [2026-03-03_개인정보보호법_주요_벌칙_규정.md](reports/2026-03-03_개인정보보호법_주요_벌칙_규정.md) | ✅ Verified |
-| 2026-03-04 | [2026-03-04_Unix_파일_시스템(Inode,_SuperBlock).md](reports/2026-03-04_Unix_파일_시스템(Inode,_SuperBlock).md) | ✅ Verified |
-| 2026-03-05 | [2026-03-05_정보통신망법과_정보통신기반보호법.md](reports/2026-03-05_정보통신망법과_정보통신기반보호법.md) | ✅ Verified |
-| 2026-03-06 | [2026-03-06_가상_메모리와_페이지_교체_알고리즘.md](reports/2026-03-06_가상_메모리와_페이지_교체_알고리즘.md) | ✅ Verified |
-| 2026-03-07 | [2026-03-07_디지털_포렌식_증거_수집_원칙.md](reports/2026-03-07_디지털_포렌식_증거_수집_원칙.md) | ✅ Verified |
-| 2026-03-08 | [2026-03-08_GDPR_주요_내용.md](reports/2026-03-08_GDPR_주요_내용.md) | ✅ Verified |
-| 2026-03-09 | [2026-03-09_웹_방화벽(WAF)의_역할.md](reports/2026-03-09_웹_방화벽(WAF)의_역할.md) | ✅ Verified |
-| 2026-03-10 | [2026-03-10_GDPR_주요_내용.md](reports/2026-03-10_GDPR_주요_내용.md) | ✅ Verified |
-| 2026-03-11 | [2026-03-11_메모리_관리(Paging_vs_Segmentation).md](reports/2026-03-11_메모리_관리(Paging_vs_Segmentation).md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_GDPR_주요_내용.md](reports/2025-12-06_GDPR_주요_내용.md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_랜섬웨어_동작_원리_및_대응.md](reports/2025-12-06_랜섬웨어_동작_원리_및_대응.md) | ✅ Verified |
+| 2025-12-06 | [2025-12-06_세마포어_심층분석.md](reports/2025-12-06_세마포어_심층분석.md) | ✅ Verified |
+| 2025-12-07 | [2025-12-07_전자상거래_보안(SET,_SSL).md](reports/2025-12-07_전자상거래_보안(SET,_SSL).md) | ✅ Verified |
+| 2025-12-08 | [2025-12-08_공개키_암호화(RSA,_ECC).md](reports/2025-12-08_공개키_암호화(RSA,_ECC).md) | ✅ Verified |
+| 2025-12-09 | [2025-12-09_버퍼_오버플로우(Stack,_Heap)_취약점.md](reports/2025-12-09_버퍼_오버플로우(Stack,_Heap)_취약점.md) | ✅ Verified |
+| 2025-12-10 | [2025-12-10_접근통제_모델(MAC,_DAC,_RBAC).md](reports/2025-12-10_접근통제_모델(MAC,_DAC,_RBAC).md) | ✅ Verified |
+| 2025-12-11 | [2025-12-11_PKI(공개키_기반_구조)_구성요소.md](reports/2025-12-11_PKI(공개키_기반_구조)_구성요소.md) | ✅ Verified |
+| 2025-12-12 | [2025-12-12_SSL_TLS_핸드셰이크_상세_과정.md](reports/2025-12-12_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
+| 2025-12-13 | [2025-12-13_SSRF(Server_Side_Request_Forgery).md](reports/2025-12-13_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
+| 2025-12-14 | [2025-12-14_프로세스_스케줄링(RR,_SRT,_MLQ).md](reports/2025-12-14_프로세스_스케줄링(RR,_SRT,_MLQ).md) | ✅ Verified |
 | 2025-12-15 | [2025-12-15_접근통제_모델(MAC,_DAC,_RBAC).md](reports/2025-12-15_접근통제_모델(MAC,_DAC,_RBAC).md) | ✅ Verified |
 | 2025-12-16 | [2025-12-16_SQL_Injection(Error,_Blind,_Union).md](reports/2025-12-16_SQL_Injection(Error,_Blind,_Union).md) | ✅ Verified |
 | 2025-12-17 | [2025-12-17_SSRF(Server_Side_Request_Forgery).md](reports/2025-12-17_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
@@ -260,17 +269,9 @@
 | 2026-01-26 | [2026-01-26_OSI_7계층_모델_상세_분석.md](reports/2026-01-26_OSI_7계층_모델_상세_분석.md) | ✅ Verified |
 | 2026-01-27 | [2026-01-27_가상_메모리와_페이지_교체_알고리즘.md](reports/2026-01-27_가상_메모리와_페이지_교체_알고리즘.md) | ✅ Verified |
 | 2026-01-28 | [2026-01-28_GDPR_주요_내용.md](reports/2026-01-28_GDPR_주요_내용.md) | ✅ Verified |
-| 2025-12-06 | [2025-12-06_GDPR_주요_내용.md](reports/2025-12-06_GDPR_주요_내용.md) | ✅ Verified |
-| 2025-12-06 | [2025-12-06_랜섬웨어_동작_원리_및_대응.md](reports/2025-12-06_랜섬웨어_동작_원리_및_대응.md) | ✅ Verified |
-| 2025-12-06 | [2025-12-06_세마포어_심층분석.md](reports/2025-12-06_세마포어_심층분석.md) | ✅ Verified |
-| 2025-12-07 | [2025-12-07_전자상거래_보안(SET,_SSL).md](reports/2025-12-07_전자상거래_보안(SET,_SSL).md) | ✅ Verified |
-| 2025-12-08 | [2025-12-08_공개키_암호화(RSA,_ECC).md](reports/2025-12-08_공개키_암호화(RSA,_ECC).md) | ✅ Verified |
-| 2025-12-09 | [2025-12-09_버퍼_오버플로우(Stack,_Heap)_취약점.md](reports/2025-12-09_버퍼_오버플로우(Stack,_Heap)_취약점.md) | ✅ Verified |
-| 2025-12-10 | [2025-12-10_접근통제_모델(MAC,_DAC,_RBAC).md](reports/2025-12-10_접근통제_모델(MAC,_DAC,_RBAC).md) | ✅ Verified |
-| 2025-12-11 | [2025-12-11_PKI(공개키_기반_구조)_구성요소.md](reports/2025-12-11_PKI(공개키_기반_구조)_구성요소.md) | ✅ Verified |
-| 2025-12-12 | [2025-12-12_SSL_TLS_핸드셰이크_상세_과정.md](reports/2025-12-12_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
-| 2025-12-13 | [2025-12-13_SSRF(Server_Side_Request_Forgery).md](reports/2025-12-13_SSRF(Server_Side_Request_Forgery).md) | ✅ Verified |
-| 2025-12-14 | [2025-12-14_프로세스_스케줄링(RR,_SRT,_MLQ).md](reports/2025-12-14_프로세스_스케줄링(RR,_SRT,_MLQ).md) | ✅ Verified |
+| 2026-01-29 | [2026-01-29_SSL_TLS_핸드셰이크_상세_과정.md](reports/2026-01-29_SSL_TLS_핸드셰이크_상세_과정.md) | ✅ Verified |
+| 2026-01-30 | [2026-01-30_위험_관리(Risk_Management)_방법론.md](reports/2026-01-30_위험_관리(Risk_Management)_방법론.md) | ✅ Verified |
+| 2026-01-31 | [2026-01-31_스테가노그래피(Steganography).md](reports/2026-01-31_스테가노그래피(Steganography).md) | ✅ Verified |
 | 2025-12-06 | [2025-12-06_CC_인증(Common_Criteria).md](reports/2025-12-06_CC_인증(Common_Criteria).md) | ✅ Verified |
 
 ---
