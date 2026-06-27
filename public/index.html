@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>정보보안기사 공부 홈페이지</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="badge">Information Security Engineer Study</p>
+      <h1>정보보안기사 공부 홈페이지</h1>
+      <p class="subtitle">과목별 개념 정리, 문제풀이, 오답노트, 30일 학습계획을 한 곳에서 확인합니다.</p>
+      <div class="actions">
+        <a href="#quiz" class="button primary">문제 풀기</a>
+        <a href="#subjects" class="button">과목 보기</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel" id="dashboard">
+      <h2>학습 대시보드</h2>
+      <div class="cards">
+        <article class="card"><strong>5</strong><span>필기 과목</span></article>
+        <article class="card"><strong>25+</strong><span>기본 문제</span></article>
+        <article class="card"><strong>30일</strong><span>학습 계획</span></article>
+        <article class="card"><strong>60점</strong><span>평균 합격 기준</span></article>
+      </div>
+    </section>
+
+    <section class="panel" id="subjects">
+      <h2>과목별 핵심 개념</h2>
+      <div id="subject-list" class="subject-grid"></div>
+    </section>
+
+    <section class="panel" id="quiz">
+      <h2>문제풀이</h2>
+      <div class="quiz-controls">
+        <select id="subject-select">
+          <option value="">전체 과목</option>
+        </select>
+        <select id="level-select">
+          <option value="">전체 난이도</option>
+          <option value="basic">기초</option>
+          <option value="intermediate">중급</option>
+          <option value="advanced">심화</option>
+        </select>
+        <button id="load-quiz">문제 불러오기</button>
+      </div>
+      <div id="quiz-list"></div>
+      <button id="grade-button" class="button primary">채점하기</button>
+      <div id="score-box" class="score-box"></div>
+    </section>
+
+    <section class="panel" id="wrong-note">
+      <h2>오답노트 작성법</h2>
+      <ol>
+        <li>틀린 문제의 과목과 문제 ID를 기록합니다.</li>
+        <li>틀린 이유를 개념 미숙, 암기 오류, 문제 해석 오류, 실수로 분류합니다.</li>
+        <li>정답 근거를 한 줄로 정리합니다.</li>
+        <li>1일 후, 3일 후, 7일 후 재풀이합니다.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>GitHub 기반 정보보안기사 공부 자료 · Node.js 서버와 정적 홈페이지 구조 지원</p>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
