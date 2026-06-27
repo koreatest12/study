@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.x'
 
@@ -73,25 +73,16 @@ jobs:
 
           print("✨ Encoding check completed.")
 
-      # ⚡ [수정됨] 조건문(if)을 제거하여 무조건 실행되도록 변경
       - name: Commit and Push Changes (Always Execute)
         run: |
-          # 1. Git 사용자 설정
           git config --global user.name "encoding-guard-bot"
           git config --global user.email "guard@noreply.github.com"
-          
-          # 2. 모든 변경사항 스테이징
           git add .
-          
-          # 3. 변경사항 유무 확인 및 처리 (에러 방지 로직)
           echo "🔍 Checking for changes to commit..."
-          
           if git diff --staged --quiet; then
-            # 변경사항이 없을 경우
             echo "✅ No changes detected. (Clean)"
             echo "Skip pushing to avoid empty commit error."
           else
-            # 변경사항이 있을 경우
             echo "🚀 Changes detected! Committing and Pushing..."
             git commit -m "🚑 Auto-fix: Normalize filenames and convert to UTF-8"
             git push
