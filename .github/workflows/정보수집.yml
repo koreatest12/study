@@ -196,7 +196,7 @@ jobs:
 
     steps:
       - name: 📥 배포 패키지 다운로드
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: server-deployment-package
           path: ./deploy-package
