@@ -33,6 +33,34 @@ jobs:
         working-directory: security-study-platform
         run: node -e "JSON.parse(require('fs').readFileSync('./data/questions.json','utf8')); console.log('questions.json valid')"
 
-      - name: Load server module
+      - name: Validate Node.js source
         working-directory: security-study-platform
         run: npm test
+
+      - name: Managed server restart smoke test
+        working-directory: security-study-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run start:managed > /tmp/security-study-manager.log 2>&1 &
+          MANAGER_PID=$!
+          trap 'kill "$MANAGER_PID" 2>/dev/null || true' EXIT
+
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:3000/api/health > /tmp/health-before.json; then
+              break
+            fi
+            sleep 1
+          done
+
+          curl -fsS http://127.0.0.1:3000/api/health
+          npm run status
+          npm run restart
+          sleep 3
+          curl -fsS http://127.0.0.1:3000/api/health > /tmp/health-after.json
+          npm run status
+          npm run stop
+          wait "$MANAGER_PID" || true
+
+          echo '--- manager log ---'
+          cat /tmp/security-study-manager.log
