@@ -1,0 +1,12 @@
+{
+  "name": "Security Study Platform",
+  "short_name": "Security Study",
+  "description": "정보보안기사·네트워크·웹 보안·보안운영 통합 학습 플랫폼",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#08111f",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

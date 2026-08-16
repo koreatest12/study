@@ -1,57 +1,25 @@
-name: "CodeQL Advanced"
-
+name: CodeQL Security Analysis
 on:
-push:
-branches:
-- "main"
-
-pull_request:
-branches:
-- "main"
-
-schedule:
-# 매주 토요일 05:24 UTC 실행
-# 한국시간 기준 토요일 14:24 실행
-- cron: "24 5 * * 6"
-
-workflow_dispatch:
-
+  push:
+    branches: [main, 'agent/**']
+    paths: ['security-study-platform/**', '.github/workflows/**']
+  pull_request:
+    branches: [main]
+    paths: ['security-study-platform/**', '.github/workflows/**']
+  schedule:
+    - cron: '24 5 * * 6'
+  workflow_dispatch:
+permissions: { contents: read, security-events: write, packages: read }
 jobs:
-analyze:
-name: "CodeQL Analyze - ${{ matrix.language }}"
-
-```
-runs-on: ubuntu-latest
-
-permissions:
-  security-events: write
-  packages: read
-  actions: read
-  contents: read
-
-strategy:
-  fail-fast: false
-  matrix:
-    include:
-      - language: actions
-        build-mode: none
-
-      - language: javascript-typescript
-        build-mode: none
-
-steps:
-  - name: "Checkout repository"
-    uses: actions/checkout@v4
-
-  - name: "Initialize CodeQL"
-    uses: github/codeql-action/init@v4
-    with:
-      languages: ${{ matrix.language }}
-      build-mode: ${{ matrix.build-mode }}
-      queries: "+security-extended,security-and-quality"
-
-  - name: "Perform CodeQL Analysis"
-    uses: github/codeql-action/analyze@v4
-    with:
-      category: "/language:${{ matrix.language }}"
-```
+  analyze:
+    name: CodeQL - ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: { language: [javascript-typescript, actions] }
+    steps:
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
+        with: { languages: '${{ matrix.language }}', queries: 'security-extended,security-and-quality' }
+      - uses: github/codeql-action/analyze@v4
+        with: { category: '/language:${{ matrix.language }}' }

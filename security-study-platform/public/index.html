@@ -3,65 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>정보보안기사 · IT 인프라 보안 Study Server</title>
+  <meta name="theme-color" content="#08111f" />
+  <meta name="description" content="정보보안기사, 네트워크, 웹 보안, 보안관제, IT 인프라 실습과 기술면접을 통합 학습하는 Security Study Platform" />
+  <title>Security Study Platform v3</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header class="hero">
-  <div class="hero-inner">
-    <p class="eyebrow">Certified Information Security Engineer · Infra · Security</p>
-    <h1>정보보안기사 · IT 인프라 보안 Study Server</h1>
-    <p>네트워크, 웹 보안, 정보보안기사, 실무 장애분석, 기술면접을 한 곳에서 학습합니다.</p>
-    <div class="hero-actions"><button data-view="dashboard">대시보드</button><button data-view="quiz" class="secondary">랜덤 문제</button></div>
-  </div>
-</header>
-<nav class="tabs" id="tabs">
-  <button data-view="dashboard" class="active">대시보드</button>
-  <button data-view="network">네트워크</button>
-  <button data-view="web">웹 보안</button>
-  <button data-view="labs">실습 LAB</button>
-  <button data-view="quiz">문제은행</button>
-  <button data-view="interview">취업·면접</button>
-</nav>
-<main class="container">
-  <section id="dashboard" class="view active">
-    <div class="stats">
-      <article><strong id="solvedCount">0</strong><span>풀이 문제</span></article>
-      <article><strong id="correctCount">0</strong><span>정답</span></article>
-      <article><strong id="wrongCount">0</strong><span>오답노트</span></article>
-      <article><strong id="accuracy">0%</strong><span>정답률</span></article>
-    </div>
-    <h2>학습 로드맵</h2>
-    <div class="grid cards">
-      <article><h3>1. 네트워크</h3><p>OSI/TCP-IP → Subnet → TCP/UDP → DNS/DHCP → VLAN/Routing → Firewall/VPN</p></article>
-      <article><h3>2. 웹 보안</h3><p>HTTP/HTTPS → Cookie/Session → XSS/CSRF → SQLi → 인증·인가 → WAF/로그</p></article>
-      <article><h3>3. 정보보안기사</h3><p>시스템·네트워크·어플리케이션·일반·관리/법규 + 실기 서술형</p></article>
-      <article><h3>4. 취업 준비</h3><p>서버/인프라 · 보안관제 · 장애 RCA · 자동화 · 기술면접 STAR 답변</p></article>
-    </div>
-  </section>
-
-  <section id="network" class="view"><h2>네트워크 핵심</h2><div id="networkTopics" class="topic-list"></div></section>
-  <section id="web" class="view"><h2>웹 보안 핵심</h2><div id="webTopics" class="topic-list"></div></section>
-
-  <section id="labs" class="view">
-    <h2>실습 LAB</h2>
-    <div class="lab-grid">
-      <article class="lab"><h3>Subnet Calculator</h3><label>IPv4 <input id="ipInput" value="192.168.10.70"></label><label>CIDR <input id="cidrInput" type="number" min="0" max="32" value="26"></label><button id="subnetBtn">계산</button><pre id="subnetResult">계산 결과가 표시됩니다.</pre></article>
-      <article class="lab"><h3>Firewall Rule LAB</h3><p>정책: 서버망(10.20.0.0/24)에서 인터넷으로 TCP 80/443만 허용</p><label>목적지 포트 <input id="portInput" type="number" value="25"></label><button id="firewallBtn">판정</button><pre id="firewallResult">ALLOW / DENY를 확인하세요.</pre></article>
-      <article class="lab"><h3>장애분석 LAB</h3><p id="troubleQuestion"></p><div id="troubleOptions" class="options"></div><p id="troubleResult"></p></article>
-      <article class="lab"><h3>TCP 3-Way Handshake</h3><div class="flow"><span>Client</span><b> SYN → </b><span>Server</span><br><span>Client</span><b> ← SYN/ACK </b><span>Server</span><br><span>Client</span><b> ACK → </b><span>Server</span></div><p>결과: <strong>ESTABLISHED</strong></p></article>
-    </div>
-  </section>
-
-  <section id="quiz" class="view">
-    <div class="panel-header"><h2>정보보안기사 문제은행</h2><button id="newQuizBtn">새 문제</button></div>
-    <article id="quizBox" class="quiz-box"></article>
-    <h3>오답노트</h3><div id="wrongList" class="wrong-list"></div><button id="clearWrongBtn" class="secondary">오답 초기화</button>
-  </section>
-
-  <section id="interview" class="view"><h2>취업 · 기술면접</h2><div id="interviewList" class="topic-list"></div></section>
-</main>
-<footer>GitHub 기반 개인 학습 플랫폼 · 정보보안기사 + IT 인프라/보안 취업 대비</footer>
-<script src="app.js"></script>
-</body>
-</html>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+<header class="hero"><div class="hero-inner"><div><p class="eyebrow">Certified Information Security Engineer · Infra · Security Operations</p><h1>Security Study Platform <span id="appVersion">v3</span></h1><p>정보보안기사, 네트워크, 웹 보안, SIEM/WAF, 장애분석, 기술면접을 하나의 반복학습 플랫폼으로 통합합니다.</p></div><div class="hero-actions"><button data-view="dashboard">대시보드</button><button data-view="quiz" class="secondary">랜덤 문제</button><button id="installBtn" class="secondary" hidden>PWA 설치</button></div></div></header>
+<nav class="tabs" aria-label="주요 학습 메뉴"><button data-view="dashboard" class="active">대시보드</button><button data-view="search">통합검색</button><button data-view="network">네트워크</button><button data-view="web">웹 보안</button><button data-view="securityops">보안운영</button><button data-view="labs">실습 LAB</button><button data-view="quiz">문제은행</button><button data-view="exam">모의고사</button><button data-view="interview">취업·면접</button><button data-view="monitoring">서버 모니터링</button></nav>
+<main id="main" class="container">
+<section id="dashboard" class="view active" aria-labelledby="dashboardTitle"><div class="section-head"><div><p class="eyebrow">Learning Dashboard</p><h2 id="dashboardTitle">학습 현황</h2></div><div class="toolbar"><button id="exportBtn" class="secondary">학습데이터 내보내기</button><label class="file-label">가져오기<input id="importInput" type="file" accept="application/json" /></label></div></div><p id="importStatus" class="status-line" aria-live="polite"></p><div class="stats stats-six"><article><strong id="solvedCount">0</strong><span>풀이 문제</span></article><article><strong id="correctCount">0</strong><span>정답</span></article><article><strong id="wrongCount">0</strong><span>오답노트</span></article><article><strong id="accuracy">0%</strong><span>정답률</span></article><article><strong id="reviewDueCount">0</strong><span>오늘 복습</span></article><article><strong id="bookmarkCount">0</strong><span>북마크</span></article></div><div class="dashboard-grid"><article class="panel"><h3>과목별 진도</h3><div id="progressList"></div></article><article class="panel"><h3>복습 큐</h3><div id="reviewQueue"></div></article><article class="panel span-2"><h3>북마크</h3><div id="bookmarkList" class="mini-list"></div></article></div><h2>학습 로드맵</h2><div class="grid cards"><article><h3>1. 네트워크</h3><p>OSI/TCP-IP → Subnet → TCP/UDP → DNS/DHCP → VLAN/Routing → Firewall/VPN</p></article><article><h3>2. 웹 보안</h3><p>HTTP/HTTPS → Cookie/Session → XSS/CSRF → SQLi → 인증·인가 → SSRF → WAF/로그</p></article><article><h3>3. 보안 운영</h3><p>SIEM → IDS/IPS → 접근통제 → 상관분석 → 사고대응 → RCA</p></article><article><h3>4. 시험·취업</h3><p>오답 반복학습 → 모의고사 → 실기 서술형 사고과정 → 인프라·보안 기술면접</p></article></div></section>
+<section id="search" class="view"><h2>통합 검색</h2><label class="search-box"><span>키워드</span><input id="searchInput" type="search" placeholder="예: DNSSEC, XSS, SIEM, Routing" /></label><div id="searchResults" class="topic-list search-results"></div></section>
+<section id="network" class="view"><h2>네트워크 핵심</h2><div id="networkTopics" class="topic-list"></div></section><section id="web" class="view"><h2>웹 보안 핵심</h2><div id="webTopics" class="topic-list"></div></section><section id="securityops" class="view"><h2>보안 운영·관제</h2><div id="securityOpsTopics" class="topic-list"></div></section>
+<section id="labs" class="view"><h2>실습 LAB</h2><div class="lab-grid"><article class="lab"><h3>Subnet Calculator</h3><label>IPv4 <input id="ipInput" value="192.168.10.70" /></label><label>CIDR <input id="cidrInput" type="number" min="0" max="32" value="26" /></label><button id="subnetBtn">계산</button><pre id="subnetResult">계산 결과가 표시됩니다.</pre></article><article class="lab"><h3>Firewall Rule LAB</h3><p>정책: 서버망에서 인터넷으로 TCP 80/443만 허용</p><label>목적지 포트 <input id="portInput" type="number" min="1" max="65535" value="25" /></label><button id="firewallBtn">판정</button><pre id="firewallResult">ALLOW / DENY를 확인하세요.</pre></article><article class="lab"><h3>장애분석 LAB</h3><p id="troubleQuestion"></p><div id="troubleOptions" class="options"></div><p id="troubleResult" class="result"></p></article><article class="lab"><h3>TCP 3-Way Handshake</h3><div class="flow"><span>Client</span><b>SYN →</b><span>Server</span><span>Client</span><b>← SYN/ACK</b><span>Server</span><span>Client</span><b>ACK →</b><span>Server</span></div><p>결과: <strong>ESTABLISHED</strong></p></article></div><h2>SIEM 로그 분류 LAB</h2><div id="siemLabList" class="scenario-grid"></div><h2>WAF 분석 LAB</h2><div id="wafLabList" class="scenario-grid"></div></section>
+<section id="quiz" class="view"><div class="panel-header"><div><p class="eyebrow">Spaced Repetition</p><h2>정보보안기사 문제은행</h2><span id="quizModeLabel" class="badge">랜덤 문제</span></div><div class="toolbar"><label class="toggle"><input id="reviewOnlyToggle" type="checkbox" /> 오늘 복습만</label><button id="newQuizBtn">새 문제</button></div></div><article id="quizBox" class="quiz-box"></article><h3>오답노트</h3><div id="wrongList" class="wrong-list"></div><button id="clearWrongBtn" class="secondary">오답 초기화</button></section>
+<section id="exam" class="view"><div class="panel-header"><div><p class="eyebrow">Mock Exam</p><h2>10문제 모의고사</h2></div><div class="exam-meta"><strong id="examTimer">10:00</strong><span id="examProgress">0/10</span><button id="startExamBtn">시험 시작</button></div></div><article id="examBox" class="quiz-box"><p>10분 동안 10문제를 풀고 결과를 기록합니다.</p></article><h3>최근 시험 기록</h3><ul id="examHistory" class="history"></ul></section>
+<section id="interview" class="view"><h2>취업 · 기술면접</h2><div id="interviewList" class="topic-list"></div></section>
+<section id="monitoring" class="view"><div class="panel-header"><div><p class="eyebrow">Operations</p><h2>서버 모니터링</h2></div><button id="refreshMetricsBtn">새로고침</button></div><p id="serverStatus" class="status static">상태 확인 전</p><pre id="serverMetrics" class="metrics">로컬 또는 Docker 서버에서 실행하면 Health/Request/Memory 지표를 표시합니다.</pre><div class="grid cards"><article><h3>운영 포인트</h3><p>PID·Uptime·Memory·Request·4xx/5xx·평균 응답시간을 함께 확인합니다.</p></article><article><h3>재기동 판단</h3><p>프로세스 종료 또는 Health Check 연속 실패 시 Server Manager가 자동 재기동합니다.</p></article></div></section>
+</main><footer>Security Study Platform v3 · GitHub Pages/PWA + Node.js Managed Server + CI/CD Security Pipeline</footer><script src="study-utils.js"></script><script src="app.js"></script></body></html>

@@ -1,103 +1,15 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-const DATA_PATH = path.join(__dirname, 'data', 'questions.json');
-
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-function loadQuestions() {
-  const raw = fs.readFileSync(DATA_PATH, 'utf-8');
-  return JSON.parse(raw);
-}
-
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    service: 'information-security-engineer-study-platform',
-    pid: process.pid,
-    uptimeSeconds: Math.floor(process.uptime()),
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/questions', (req, res) => {
-  const { subject, limit } = req.query;
-  let questions = loadQuestions();
-
-  if (subject) {
-    questions = questions.filter((q) => q.subject === subject);
-  }
-
-  if (limit && !Number.isNaN(Number(limit))) {
-    questions = questions.slice(0, Number(limit));
-  }
-
-  res.json({
-    total: questions.length,
-    questions
-  });
-});
-
-app.get('/api/quiz/random', (req, res) => {
-  const { subject } = req.query;
-  let questions = loadQuestions();
-
-  if (subject) {
-    questions = questions.filter((q) => q.subject === subject);
-  }
-
-  if (questions.length === 0) {
-    return res.status(404).json({ message: '해당 조건의 문제가 없습니다.' });
-  }
-
-  const randomIndex = Math.floor(Math.random() * questions.length);
-  res.json(questions[randomIndex]);
-});
-
-app.get('/api/subjects', (req, res) => {
-  res.json([
-    { code: 'system', name: '시스템 보안' },
-    { code: 'network', name: '네트워크 보안' },
-    { code: 'application', name: '어플리케이션 보안' },
-    { code: 'general', name: '정보보안 일반' },
-    { code: 'management', name: '정보보안 관리 및 법규' }
-  ]);
-});
-
-if (require.main === module) {
-  const server = app.listen(PORT, () => {
-    console.log(`정보보안기사 학습 플랫폼 실행 중: http://localhost:${PORT}`);
-  });
-
-  let closing = false;
-
-  function gracefulShutdown(signal) {
-    if (closing) return;
-    closing = true;
-    console.log(`[server] ${signal} 수신 - 신규 연결을 중단하고 정상 종료합니다.`);
-
-    server.close((error) => {
-      if (error) {
-        console.error('[server] 정상 종료 중 오류:', error);
-        process.exit(1);
-      }
-      console.log('[server] 정상 종료 완료');
-      process.exit(0);
-    });
-
-    const forceExitTimer = setTimeout(() => {
-      console.error('[server] 종료 제한시간 초과 - 강제 종료합니다.');
-      process.exit(1);
-    }, 5000);
-    forceExitTimer.unref();
-  }
-
-  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-}
-
-module.exports = app;
+'use strict';
+const express=require('express');const fs=require('fs');const path=require('path');const os=require('os');
+const app=express(),PORT=Number(process.env.PORT||3000),DATA_PATH=path.join(__dirname,'data','questions.json'),PUBLIC_DIR=path.join(__dirname,'public'),MANAGER_STATUS_FILE=process.env.MANAGER_STATUS_FILE||path.join(os.tmpdir(),'security-study-manager-status.json'),startedAt=Date.now();
+const requestMetrics={total:0,clientErrors:0,serverErrors:0,totalResponseMs:0,lastRequestAt:null};app.disable('x-powered-by');
+app.use((req,res,next)=>{const t=performance.now();requestMetrics.total+=1;requestMetrics.lastRequestAt=new Date().toISOString();res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");res.on('finish',()=>{requestMetrics.totalResponseMs+=performance.now()-t;if(res.statusCode>=400&&res.statusCode<500)requestMetrics.clientErrors+=1;if(res.statusCode>=500)requestMetrics.serverErrors+=1});next()});
+app.use(express.json({limit:'128kb'}));app.use(express.static(PUBLIC_DIR,{etag:true,maxAge:process.env.NODE_ENV==='production'?'1h':0,setHeaders(res,filePath){if(filePath.endsWith('sw.js')||filePath.endsWith('index.html'))res.setHeader('Cache-Control','no-cache')}}));
+function loadQuestions(){return JSON.parse(fs.readFileSync(DATA_PATH,'utf-8'))}function systemSnapshot(){const m=process.memoryUsage();return{pid:process.pid,node:process.version,platform:process.platform,uptimeSeconds:Math.floor(process.uptime()),rssBytes:m.rss,heapUsedBytes:m.heapUsed,heapTotalBytes:m.heapTotal,loadAverage:os.loadavg()}}
+app.get('/api/health',(_req,res)=>res.json({status:'ok',service:'information-security-engineer-study-platform',version:'3.0.0',...systemSnapshot(),timestamp:new Date().toISOString()}));
+app.get('/api/metrics',(_req,res)=>{const avg=requestMetrics.total?Number((requestMetrics.totalResponseMs/requestMetrics.total).toFixed(2)):0;res.json({service:'information-security-engineer-study-platform',runningSince:new Date(startedAt).toISOString(),requests:{total:requestMetrics.total,clientErrors4xx:requestMetrics.clientErrors,serverErrors5xx:requestMetrics.serverErrors,averageResponseMs:avg,lastRequestAt:requestMetrics.lastRequestAt},system:systemSnapshot(),timestamp:new Date().toISOString()})});
+app.get('/api/manager-status',(_req,res)=>{try{res.json(JSON.parse(fs.readFileSync(MANAGER_STATUS_FILE,'utf8')))}catch(_error){res.status(404).json({running:false,message:'Server Manager status is not available.'})}});
+app.get('/api/questions',(req,res)=>{const{subject,limit}=req.query;let q=loadQuestions();if(subject)q=q.filter(x=>x.subject===subject);if(limit&&!Number.isNaN(Number(limit)))q=q.slice(0,Math.max(0,Number(limit)));res.json({total:q.length,questions:q})});
+app.get('/api/quiz/random',(req,res)=>{const{subject}=req.query;let q=loadQuestions();if(subject)q=q.filter(x=>x.subject===subject);if(!q.length)return res.status(404).json({message:'해당 조건의 문제가 없습니다.'});return res.json(q[Math.floor(Math.random()*q.length)])});
+app.get('/api/subjects',(_req,res)=>res.json([{code:'system',name:'시스템 보안'},{code:'network',name:'네트워크 보안'},{code:'application',name:'어플리케이션 보안'},{code:'general',name:'정보보안 일반'},{code:'management',name:'정보보안 관리 및 법규'}]));
+app.get('/api/security-labs',(_req,res)=>res.json({policy:'defensive-training-only',labs:['SIEM correlation','WAF triage','network troubleshooting','firewall policy evaluation']}));app.use('/api',(_req,res)=>res.status(404).json({message:'API endpoint not found'}));
+if(require.main===module){const server=app.listen(PORT,'0.0.0.0',()=>console.log(`Security Study Platform v3: http://localhost:${PORT}`));let closing=false;function shutdown(signal){if(closing)return;closing=true;console.log(`[server] ${signal} 수신 - 신규 연결을 중단하고 정상 종료합니다.`);server.close(error=>{if(error){console.error('[server] 정상 종료 중 오류:',error);process.exit(1)}console.log('[server] 정상 종료 완료');process.exit(0)});const timer=setTimeout(()=>{console.error('[server] 종료 제한시간 초과 - 강제 종료합니다.');process.exit(1)},5000);timer.unref()}process.on('SIGTERM',()=>shutdown('SIGTERM'));process.on('SIGINT',()=>shutdown('SIGINT'))}module.exports=app;

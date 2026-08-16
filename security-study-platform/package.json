@@ -1,32 +1,19 @@
 {
   "name": "information-security-engineer-study-platform",
-  "version": "1.1.0",
-  "description": "정보보안기사 공부 자료, 문제풀이, 오답노트, 홈페이지, 서버 API 및 자동 재기동 관리 학습 플랫폼",
+  "version": "3.0.0",
+  "description": "정보보안기사·네트워크·웹 보안·보안관제·IT 인프라 학습, PWA, 자동 재기동, 테스트 및 CI/CD 보안 통합 플랫폼",
   "main": "server.js",
   "type": "commonjs",
+  "engines": { "node": ">=22.13.0" },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "start:managed": "node scripts/server-manager.js",
-    "status": "node scripts/server-control.js status",
-    "restart": "node scripts/server-control.js restart",
-    "start:service": "node scripts/server-control.js start",
-    "stop": "node scripts/server-control.js stop",
-    "check": "node --check server.js && node --check scripts/server-manager.js && node --check scripts/server-control.js",
-    "test": "npm run check && node -e \"require('./server'); console.log('server module load ok')\""
+    "start": "node server.js", "dev": "node server.js", "start:managed": "node scripts/server-manager.js", "status": "node scripts/server-control.js status", "restart": "node scripts/server-control.js restart", "start:service": "node scripts/server-control.js start", "stop": "node scripts/server-control.js stop",
+    "build": "node scripts/build-site.js",
+    "check": "node --check server.js && node --check scripts/server-manager.js && node --check scripts/server-control.js && node --check scripts/build-site.js && node --check public/study-utils.js && node --check public/app.js && node --check public/sw.js",
+    "lint": "eslint server.js scripts public tests", "format": "prettier --write \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore", "format:check": "prettier --check \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore",
+    "test:unit": "vitest run", "test:e2e": "playwright test", "test": "npm run check && npm run lint && npm run test:unit", "test:ci": "npm run test && npm run build", "audit:high": "npm audit --audit-level=high", "sbom": "npm sbom --sbom-format=cyclonedx"
   },
-  "keywords": [
-    "information-security",
-    "security-engineer",
-    "quiz",
-    "study",
-    "server-manager",
-    "auto-restart",
-    "korea"
-  ],
+  "keywords": ["information-security","security-engineer","network-security","web-security","siem","waf","pwa","quiz","study","server-manager","auto-restart","korea"],
   "license": "MIT",
-  "dependencies": {
-    "express": "^4.18.3"
-  },
-  "devDependencies": {}
+  "dependencies": { "express": "^5.2.1" },
+  "devDependencies": { "@playwright/test": "^1.62.1", "eslint": "^10.8.1", "lighthouse": "^13.4.1", "prettier": "^3.9.6", "vitest": "^4.1.10" }
 }
