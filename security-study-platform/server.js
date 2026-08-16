@@ -18,6 +18,8 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'information-security-engineer-study-platform',
+    pid: process.pid,
+    uptimeSeconds: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
   });
 });
@@ -67,9 +69,35 @@ app.get('/api/subjects', (req, res) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`정보보안기사 학습 플랫폼 실행 중: http://localhost:${PORT}`);
   });
+
+  let closing = false;
+
+  function gracefulShutdown(signal) {
+    if (closing) return;
+    closing = true;
+    console.log(`[server] ${signal} 수신 - 신규 연결을 중단하고 정상 종료합니다.`);
+
+    server.close((error) => {
+      if (error) {
+        console.error('[server] 정상 종료 중 오류:', error);
+        process.exit(1);
+      }
+      console.log('[server] 정상 종료 완료');
+      process.exit(0);
+    });
+
+    const forceExitTimer = setTimeout(() => {
+      console.error('[server] 종료 제한시간 초과 - 강제 종료합니다.');
+      process.exit(1);
+    }, 5000);
+    forceExitTimer.unref();
+  }
+
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 module.exports = app;
