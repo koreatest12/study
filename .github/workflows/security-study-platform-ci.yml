@@ -215,7 +215,7 @@ jobs:
 
       - name: Upload restart test logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-study-server-restart-logs-${{ github.run_number }}
           path: ${{ runner.temp }}/security-study-artifacts
@@ -260,16 +260,16 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload study site artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: security-study-platform/public
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Write deployment summary
         run: |
