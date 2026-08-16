@@ -1,18 +1,37 @@
-name: Security Study Platform CI
+name: Security Study Platform - CI, Restart & Pages
 
 on:
   push:
+    branches:
+      - main
+      - 'agent/**'
     paths:
       - 'security-study-platform/**'
       - '.github/workflows/security-study-platform-ci.yml'
   pull_request:
+    branches:
+      - main
     paths:
       - 'security-study-platform/**'
       - '.github/workflows/security-study-platform-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-study-platform-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  WORKDIR: security-study-platform
+  NODE_VERSION: '24'
 
 jobs:
   validate-platform:
+    name: Validate, restart smoke test, and collect logs
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
@@ -21,46 +40,242 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: security-study-platform/package.json
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Show runtime versions
+        run: |
+          node --version
+          npm --version
 
       - name: Install dependencies
-        working-directory: security-study-platform
-        run: npm install
+        working-directory: ${{ env.WORKDIR }}
+        run: npm install --no-audit --no-fund
 
-      - name: Validate JSON data
-        working-directory: security-study-platform
-        run: node -e "JSON.parse(require('fs').readFileSync('./data/questions.json','utf8')); console.log('questions.json valid')"
+      - name: Validate project data and source
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('./package.json','utf8')); console.log('package.json valid')"
+          node -e "JSON.parse(require('fs').readFileSync('./data/questions.json','utf8')); console.log('questions.json valid')"
+          npm test
+          test -f public/index.html
+          test -f public/app.js
+          test -f public/styles.css
+          test -f scripts/server-manager.js
+          test -f scripts/server-control.js
 
-      - name: Validate Node.js source
-        working-directory: security-study-platform
-        run: npm test
-
-      - name: Managed server restart smoke test
-        working-directory: security-study-platform
+      - name: Managed server full restart smoke test
+        working-directory: ${{ env.WORKDIR }}
         shell: bash
+        env:
+          PORT: '3000'
+          CONTROL_PORT: '3901'
+          RESTART_TOKEN: 'ci-restart-token'
+          HEALTH_INTERVAL_MS: '750'
+          HEALTH_TIMEOUT_MS: '750'
+          HEALTH_FAILURE_THRESHOLD: '2'
+          RESTART_DELAY_MS: '500'
         run: |
           set -euo pipefail
-          npm run start:managed > /tmp/security-study-manager.log 2>&1 &
-          MANAGER_PID=$!
-          trap 'kill "$MANAGER_PID" 2>/dev/null || true' EXIT
 
+          ARTIFACT_DIR="${RUNNER_TEMP}/security-study-artifacts"
+          MANAGER_LOG="${ARTIFACT_DIR}/server-manager.log"
+          mkdir -p "$ARTIFACT_DIR"
+
+          json_field() {
+            node -e "const fs=require('fs'); const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); const v=j[process.argv[2]]; process.stdout.write(String(v ?? ''));" "$1" "$2"
+          }
+
+          control_status() {
+            curl -fsS \
+              -H "x-restart-token: ${RESTART_TOKEN}" \
+              "http://127.0.0.1:${CONTROL_PORT}/status"
+          }
+
+          wait_for_ready() {
+            local status_file="$1"
+            for i in {1..30}; do
+              if control_status > "$status_file" 2>/dev/null \
+                && curl -fsS "http://127.0.0.1:${PORT}/api/health" > /dev/null 2>&1; then
+                return 0
+              fi
+              sleep 1
+            done
+            echo 'Server did not become ready.' >&2
+            cat "$MANAGER_LOG" >&2 || true
+            return 1
+          }
+
+          wait_for_new_pid() {
+            local old_pid="$1"
+            local status_file="$2"
+            local new_pid=''
+            local running='false'
+            for i in {1..30}; do
+              if control_status > "$status_file" 2>/dev/null; then
+                new_pid="$(json_field "$status_file" childPid)"
+                running="$(json_field "$status_file" running)"
+                if [ "$running" = 'true' ] \
+                  && [ -n "$new_pid" ] \
+                  && [ "$new_pid" != "$old_pid" ] \
+                  && curl -fsS "http://127.0.0.1:${PORT}/api/health" > /dev/null 2>&1; then
+                  echo "$new_pid"
+                  return 0
+                fi
+              fi
+              sleep 1
+            done
+            echo "PID did not change from ${old_pid}." >&2
+            cat "$MANAGER_LOG" >&2 || true
+            return 1
+          }
+
+          cleanup() {
+            if [ -f "${ARTIFACT_DIR}/manager.pid" ]; then
+              MANAGER_PID="$(cat "${ARTIFACT_DIR}/manager.pid")"
+              kill "$MANAGER_PID" 2>/dev/null || true
+            fi
+          }
+          trap cleanup EXIT
+
+          echo '== Start managed server =='
+          npm run start:managed > "$MANAGER_LOG" 2>&1 &
+          MANAGER_PID=$!
+          echo "$MANAGER_PID" > "${ARTIFACT_DIR}/manager.pid"
+
+          wait_for_ready "${ARTIFACT_DIR}/status-before.json"
+          curl -fsS "http://127.0.0.1:${PORT}/api/health" > "${ARTIFACT_DIR}/health-before.json"
+          BEFORE_PID="$(json_field "${ARTIFACT_DIR}/status-before.json" childPid)"
+          test -n "$BEFORE_PID"
+
+          echo '== Verify restart token protection =='
+          NO_TOKEN_CODE="$(curl -sS -o "${ARTIFACT_DIR}/status-no-token.json" -w '%{http_code}' "http://127.0.0.1:${CONTROL_PORT}/status")"
+          test "$NO_TOKEN_CODE" = '401'
+
+          echo '== Manual restart =='
+          npm run restart > "${ARTIFACT_DIR}/manual-restart-command.json"
+          MANUAL_PID="$(wait_for_new_pid "$BEFORE_PID" "${ARTIFACT_DIR}/status-after-manual-restart.json")"
+          curl -fsS "http://127.0.0.1:${PORT}/api/health" > "${ARTIFACT_DIR}/health-after-manual-restart.json"
+          test "$MANUAL_PID" != "$BEFORE_PID"
+
+          echo '== Unexpected process exit auto-restart =='
+          kill -9 "$MANUAL_PID"
+          AUTO_PID="$(wait_for_new_pid "$MANUAL_PID" "${ARTIFACT_DIR}/status-after-crash-restart.json")"
+          curl -fsS "http://127.0.0.1:${PORT}/api/health" > "${ARTIFACT_DIR}/health-after-crash-restart.json"
+          test "$AUTO_PID" != "$MANUAL_PID"
+
+          echo '== Health-check failure auto-restart =='
+          kill -STOP "$AUTO_PID"
+          HEALTH_RESTART_REQUESTED='false'
           for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:3000/api/health > /tmp/health-before.json; then
+            if grep -q 'restart requested reason=health-check-failed' "$MANAGER_LOG"; then
+              HEALTH_RESTART_REQUESTED='true'
               break
             fi
             sleep 1
           done
+          test "$HEALTH_RESTART_REQUESTED" = 'true'
+          kill -CONT "$AUTO_PID" 2>/dev/null || true
+          HEALTH_PID="$(wait_for_new_pid "$AUTO_PID" "${ARTIFACT_DIR}/status-after-health-restart.json")"
+          curl -fsS "http://127.0.0.1:${PORT}/api/health" > "${ARTIFACT_DIR}/health-after-health-restart.json"
+          test "$HEALTH_PID" != "$AUTO_PID"
 
-          curl -fsS http://127.0.0.1:3000/api/health
-          npm run status
-          npm run restart
-          sleep 3
-          curl -fsS http://127.0.0.1:3000/api/health > /tmp/health-after.json
-          npm run status
-          npm run stop
-          wait "$MANAGER_PID" || true
+          echo '== Status and start control commands =='
+          npm run status > "${ARTIFACT_DIR}/status-command.json"
+          npm run start:service > "${ARTIFACT_DIR}/start-command.json"
+          curl -fsS "http://127.0.0.1:${PORT}/api/health" > "${ARTIFACT_DIR}/health-final.json"
 
-          echo '--- manager log ---'
-          cat /tmp/security-study-manager.log
+          echo '== Graceful manager/server stop =='
+          npm run stop > "${ARTIFACT_DIR}/stop-command.json"
+          for i in {1..20}; do
+            if ! kill -0 "$MANAGER_PID" 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          if kill -0 "$MANAGER_PID" 2>/dev/null; then
+            echo 'Manager did not stop cleanly.' >&2
+            exit 1
+          fi
+
+          if curl -fsS "http://127.0.0.1:${CONTROL_PORT}/status" > /dev/null 2>&1; then
+            echo 'Control API is still reachable after stop.' >&2
+            exit 1
+          fi
+
+          grep -q 'health check failed' "$MANAGER_LOG"
+          grep -q 'restart requested reason=health-check-failed' "$MANAGER_LOG"
+          grep -q '정상 종료 완료' "$MANAGER_LOG"
+
+          echo '== PID transition summary =='
+          printf 'initial=%s\nmanual=%s\ncrash-auto=%s\nhealth-auto=%s\n' \
+            "$BEFORE_PID" "$MANUAL_PID" "$AUTO_PID" "$HEALTH_PID" \
+            | tee "${ARTIFACT_DIR}/pid-summary.txt"
+
+          trap - EXIT
+
+      - name: Upload restart test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-study-server-restart-logs-${{ github.run_number }}
+          path: ${{ runner.temp }}/security-study-artifacts
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo '## Security Study Platform validation'
+            echo ''
+            echo '- JSON / Node.js source validation'
+            echo '- Express server module load test'
+            echo '- Restart token authorization check'
+            echo '- Manual restart test'
+            echo '- Unexpected-exit automatic restart test'
+            echo '- Health-check-failure automatic restart test'
+            echo '- Status / start / stop control command test'
+            echo '- Graceful shutdown verification'
+            echo '- Restart logs uploaded as workflow artifact'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-pages:
+    name: Deploy study UI to GitHub Pages
+    needs: validate-platform
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload study site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: security-study-platform/public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Write deployment summary
+        run: |
+          {
+            echo '## GitHub Pages deployment'
+            echo ''
+            echo "- URL: ${{ steps.deployment.outputs.page_url }}"
+            echo '- Source: security-study-platform/public'
+          } >> "$GITHUB_STEP_SUMMARY"
