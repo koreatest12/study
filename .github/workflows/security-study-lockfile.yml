@@ -1,0 +1,35 @@
+name: Generate Security Study Lockfile
+
+on:
+  push:
+    branches:
+      - 'agent/**'
+    paths:
+      - 'security-study-platform/package.json'
+      - '.github/workflows/security-study-lockfile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate-lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Generate package-lock.json
+        working-directory: security-study-platform
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Validate lockfile
+        working-directory: security-study-platform
+        run: node -e "const p=require('./package-lock.json'); if(p.lockfileVersion < 3) process.exit(1); console.log('lockfileVersion',p.lockfileVersion)"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: security-study-package-lock-${{ github.run_id }}
+          path: security-study-platform/package-lock.json
+          if-no-files-found: error
+          retention-days: 7
