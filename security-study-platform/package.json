@@ -6,14 +6,33 @@
   "type": "commonjs",
   "engines": { "node": ">=22.13.0" },
   "scripts": {
-    "start": "node server.js", "dev": "node server.js", "start:managed": "node scripts/server-manager.js", "status": "node scripts/server-control.js status", "restart": "node scripts/server-control.js restart", "start:service": "node scripts/server-control.js start", "stop": "node scripts/server-control.js stop",
+    "start": "node server.js",
+    "dev": "node server.js",
+    "start:managed": "node scripts/server-manager.js",
+    "status": "node scripts/server-control.js status",
+    "restart": "node scripts/server-control.js restart",
+    "start:service": "node scripts/server-control.js start",
+    "stop": "node scripts/server-control.js stop",
     "build": "node scripts/build-site.js",
     "check": "node --check server.js && node --check scripts/server-manager.js && node --check scripts/server-control.js && node --check scripts/build-site.js && node --check public/study-utils.js && node --check public/app.js && node --check public/sw.js",
-    "lint": "eslint server.js scripts public tests", "format": "prettier --write \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore", "format:check": "prettier --check \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore",
-    "test:unit": "vitest run", "test:e2e": "playwright test", "test": "npm run check && npm run lint && npm run test:unit", "test:ci": "npm run test && npm run build", "audit:high": "npm audit --audit-level=high", "sbom": "npm sbom --sbom-format=cyclonedx"
+    "lint": "eslint server.js scripts public tests",
+    "format": "prettier --write \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"**/*.{js,json,html,css,md,yml,yaml}\" --ignore-path .prettierignore",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "playwright test",
+    "test": "npm run check && npm run lint && npm run test:unit",
+    "test:ci": "npm run test && npm run build",
+    "audit:high": "npm audit --audit-level=high",
+    "sbom": "npm sbom --sbom-format=cyclonedx"
   },
-  "keywords": ["information-security","security-engineer","network-security","web-security","siem","waf","pwa","quiz","study","server-manager","auto-restart","korea"],
+  "keywords": ["information-security", "security-engineer", "network-security", "web-security", "siem", "waf", "pwa", "quiz", "study", "server-manager", "auto-restart", "korea"],
   "license": "MIT",
   "dependencies": { "express": "^5.2.1" },
-  "devDependencies": { "@playwright/test": "^1.62.1", "eslint": "^10.8.1", "lighthouse": "^13.4.1", "prettier": "^3.9.6", "vitest": "^4.1.10" }
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "eslint": "^10.8.1",
+    "lighthouse": "^13.4.1",
+    "prettier": "^3.9.6",
+    "vitest": "^4.1.10"
+  }
 }
