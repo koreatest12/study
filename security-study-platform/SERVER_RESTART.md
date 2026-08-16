@@ -13,6 +13,8 @@
 - 관리자/서버 정상 종료
 - 제어 API를 `127.0.0.1`에만 바인딩
 - 선택적으로 `RESTART_TOKEN`을 사용한 제어 명령 보호
+- SIGTERM/SIGINT 기반 graceful shutdown
+- Health 응답에 PID와 uptime 포함
 
 ## 설치
 
@@ -157,16 +159,66 @@ Server Manager
      └── 비정상 종료 감지 → 일정 시간 후 자동 재기동
 ```
 
-## GitHub Actions 검증
+# 통합 GitHub Actions Workflow
 
-`.github/workflows/security-study-platform-ci.yml`에서 다음을 자동 검증합니다.
+Workflow 파일:
 
-1. Node.js 소스 문법 검사
-2. 서버 관리자 실행
-3. Health Check 성공 확인
-4. `npm run restart` 실행
-5. 재기동 후 Health Check 재확인
-6. 상태 확인
-7. 정상 종료
+```text
+.github/workflows/security-study-platform-ci.yml
+```
 
-이 검증은 실제 운영 배포를 대신하는 것이 아니라 재기동 프로그램의 기본 동작을 확인하기 위한 Smoke Test입니다.
+기존 CI와 Pages 배포를 하나의 Workflow로 통합했습니다.
+
+## PR / 기능 브랜치 자동 검증
+
+1. Node.js 24 환경 구성
+2. npm 의존성 설치
+3. `package.json`, `data/questions.json` JSON 유효성 검사
+4. `server.js`, `server-manager.js`, `server-control.js` 문법 검사 및 서버 모듈 로드
+5. 학습 UI 핵심 정적 파일 존재 여부 확인
+6. Managed Server 실행 및 `/api/health` 확인
+7. `RESTART_TOKEN` 없이 Control API 접근 시 HTTP 401 확인
+8. `npm run restart` 수동 재기동 후 PID 변경 확인
+9. 자식 프로세스 강제 종료 후 자동 재기동 및 PID 변경 확인
+10. 자식 프로세스를 일시 정지해 Health Check 연속 실패를 발생시키고 자동 재기동 확인
+11. `status`, `start:service`, `stop` 제어 명령 확인
+12. graceful shutdown 로그 확인
+13. 상태 JSON, Health JSON, PID 변화, Manager 로그를 GitHub Actions Artifact로 14일 보존
+
+## main 브랜치 Pages 배포
+
+검증 Job이 성공한 경우에만 `security-study-platform/public`을 GitHub Pages로 배포합니다.
+
+배포 Job 권한은 다음과 같이 최소 범위로 분리되어 있습니다.
+
+```text
+contents: read
+pages: write
+id-token: write
+```
+
+## 수동 실행
+
+GitHub Actions 화면에서 `workflow_dispatch`로 실행할 수 있습니다. `main` 브랜치에서 수동 실행하면 검증 성공 후 Pages 배포까지 진행합니다.
+
+## Workflow 로그 확인
+
+재기동 테스트가 완료되면 `security-study-server-restart-logs-<run_number>` Artifact가 생성됩니다.
+
+주요 파일:
+
+- `server-manager.log`
+- `health-before.json`
+- `health-after-manual-restart.json`
+- `health-after-crash-restart.json`
+- `health-after-health-restart.json`
+- `status-after-manual-restart.json`
+- `status-after-crash-restart.json`
+- `status-after-health-restart.json`
+- `pid-summary.txt`
+
+이를 통해 수동 재기동, 비정상 종료 자동 복구, Health Check 장애 자동 복구가 실제로 PID 교체까지 수행됐는지 확인할 수 있습니다.
+
+## 권장 운영 방식
+
+단일 PC 학습 서버라면 현재 관리자 방식으로 충분합니다. 장기 운영 또는 여러 서버를 관리해야 한다면 이후 PM2, systemd, Windows Service/NSSM, Docker Healthcheck 같은 운영 도구와 연계할 수 있습니다.
