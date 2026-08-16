@@ -1,19 +1,27 @@
 {
   "name": "information-security-engineer-study-platform",
-  "version": "1.0.0",
-  "description": "정보보안기사 공부 자료, 문제풀이, 오답노트, 홈페이지, 서버 API 학습 플랫폼",
+  "version": "1.1.0",
+  "description": "정보보안기사 공부 자료, 문제풀이, 오답노트, 홈페이지, 서버 API 및 자동 재기동 관리 학습 플랫폼",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node -e \"require('./server'); console.log('server module load ok')\""
+    "start:managed": "node scripts/server-manager.js",
+    "status": "node scripts/server-control.js status",
+    "restart": "node scripts/server-control.js restart",
+    "start:service": "node scripts/server-control.js start",
+    "stop": "node scripts/server-control.js stop",
+    "check": "node --check server.js && node --check scripts/server-manager.js && node --check scripts/server-control.js",
+    "test": "npm run check && node -e \"require('./server'); console.log('server module load ok')\""
   },
   "keywords": [
     "information-security",
     "security-engineer",
     "quiz",
     "study",
+    "server-manager",
+    "auto-restart",
     "korea"
   ],
   "license": "MIT",
