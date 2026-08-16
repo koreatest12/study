@@ -1,13 +1,13 @@
 FROM node:24-alpine AS dependencies
 WORKDIR /app
-COPY package.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
 
 FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 CONTROL_PORT=3901
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY package.json server.js ./
+COPY package.json package-lock.json server.js ./
 COPY public ./public
 COPY data ./data
 COPY scripts ./scripts

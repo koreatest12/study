@@ -3,10 +3,14 @@ name: Security Study Platform v3 - Quality, Security, Build & Deploy
 on:
   push:
     branches: [main, 'agent/**']
-    paths: ['security-study-platform/**', '.github/workflows/security-study-platform-ci.yml']
+    paths:
+      - 'security-study-platform/**'
+      - '.github/workflows/security-study-platform-ci.yml'
   pull_request:
     branches: [main]
-    paths: ['security-study-platform/**', '.github/workflows/security-study-platform-ci.yml']
+    paths:
+      - 'security-study-platform/**'
+      - '.github/workflows/security-study-platform-ci.yml'
   workflow_dispatch:
 
 permissions:
@@ -30,14 +34,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: '${{ env.NODE_VERSION }}' }
-      - working-directory: ${{ env.WORKDIR }}
-        run: npm install --no-fund
-      - working-directory: ${{ env.WORKDIR }}
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: security-study-platform/package-lock.json
+      - name: Reproducible dependency install
+        working-directory: ${{ env.WORKDIR }}
+        run: npm ci --no-fund
+      - name: Lint and unit tests
+        working-directory: ${{ env.WORKDIR }}
         run: npm test
-      - working-directory: ${{ env.WORKDIR }}
+      - name: High-severity dependency audit
+        working-directory: ${{ env.WORKDIR }}
         run: npm run audit:high
-      - working-directory: ${{ env.WORKDIR }}
+      - name: Build verified homepage
+        working-directory: ${{ env.WORKDIR }}
         run: npm run build
       - uses: actions/upload-artifact@v7
         with:
@@ -54,31 +65,61 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: '${{ env.NODE_VERSION }}' }
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: security-study-platform/package-lock.json
       - working-directory: ${{ env.WORKDIR }}
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Test manual, crash and health automatic restart
         working-directory: ${{ env.WORKDIR }}
         shell: bash
-        env: { PORT: '3000', CONTROL_PORT: '3901', RESTART_TOKEN: 'ci-restart-token', HEALTH_INTERVAL_MS: '750', HEALTH_TIMEOUT_MS: '750', HEALTH_FAILURE_THRESHOLD: '2', RESTART_DELAY_MS: '500' }
+        env:
+          PORT: '3000'
+          CONTROL_PORT: '3901'
+          RESTART_TOKEN: 'ci-restart-token'
+          HEALTH_INTERVAL_MS: '750'
+          HEALTH_TIMEOUT_MS: '750'
+          HEALTH_FAILURE_THRESHOLD: '2'
+          RESTART_DELAY_MS: '500'
         run: |
           set -euo pipefail
-          DIR="${RUNNER_TEMP}/restart-logs"; LOG="$DIR/server-manager.log"; mkdir -p "$DIR"
+          DIR="${RUNNER_TEMP}/restart-logs"
+          LOG="$DIR/server-manager.log"
+          mkdir -p "$DIR"
           json_field(){ node -e "const j=require(process.argv[1]);process.stdout.write(String(j[process.argv[2]]??''))" "$1" "$2"; }
           status(){ curl -fsS -H "x-restart-token: ${RESTART_TOKEN}" "http://127.0.0.1:${CONTROL_PORT}/status"; }
           wait_ready(){ for i in {1..30}; do status > "$1" 2>/dev/null && curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null 2>&1 && return 0; sleep 1; done; cat "$LOG"; return 1; }
           wait_pid(){ old="$1"; out="$2"; for i in {1..30}; do if status > "$out" 2>/dev/null; then new="$(json_field "$out" childPid)"; running="$(json_field "$out" running)"; if [ "$running" = true ] && [ -n "$new" ] && [ "$new" != "$old" ] && curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null 2>&1; then echo "$new"; return 0; fi; fi; sleep 1; done; cat "$LOG"; return 1; }
-          cleanup(){ [ -n "${MANAGER_PID:-}" ] && kill "$MANAGER_PID" 2>/dev/null || true; }; trap cleanup EXIT
-          npm run start:managed > "$LOG" 2>&1 & MANAGER_PID=$!; wait_ready "$DIR/status-initial.json"; P1="$(json_field "$DIR/status-initial.json" childPid)"
-          CODE="$(curl -sS -o "$DIR/unauthorized.json" -w '%{http_code}' "http://127.0.0.1:${CONTROL_PORT}/status")"; test "$CODE" = 401
-          npm run restart > "$DIR/manual-restart.json"; P2="$(wait_pid "$P1" "$DIR/status-manual.json")"
-          kill -9 "$P2"; P3="$(wait_pid "$P2" "$DIR/status-crash.json")"
-          kill -STOP "$P3"; for i in {1..20}; do grep -q 'restart requested reason=health-check-failed' "$LOG" && break; sleep 1; done; grep -q 'restart requested reason=health-check-failed' "$LOG"; kill -CONT "$P3" 2>/dev/null || true; P4="$(wait_pid "$P3" "$DIR/status-health.json")"
-          npm run status > "$DIR/status-command.json"; npm run stop > "$DIR/stop-command.json"; for i in {1..20}; do ! kill -0 "$MANAGER_PID" 2>/dev/null && break; sleep 1; done; ! kill -0 "$MANAGER_PID" 2>/dev/null
-          printf 'initial=%s\nmanual=%s\ncrash=%s\nhealth=%s\n' "$P1" "$P2" "$P3" "$P4" | tee "$DIR/pids.txt"; trap - EXIT
+          cleanup(){ [ -n "${MANAGER_PID:-}" ] && kill "$MANAGER_PID" 2>/dev/null || true; }
+          trap cleanup EXIT
+          npm run start:managed > "$LOG" 2>&1 & MANAGER_PID=$!
+          wait_ready "$DIR/status-initial.json"
+          P1="$(json_field "$DIR/status-initial.json" childPid)"
+          CODE="$(curl -sS -o "$DIR/unauthorized.json" -w '%{http_code}' "http://127.0.0.1:${CONTROL_PORT}/status")"
+          test "$CODE" = 401
+          npm run restart > "$DIR/manual-restart.json"
+          P2="$(wait_pid "$P1" "$DIR/status-manual.json")"
+          kill -9 "$P2"
+          P3="$(wait_pid "$P2" "$DIR/status-crash.json")"
+          kill -STOP "$P3"
+          for i in {1..20}; do grep -q 'restart requested reason=health-check-failed' "$LOG" && break; sleep 1; done
+          grep -q 'restart requested reason=health-check-failed' "$LOG"
+          kill -CONT "$P3" 2>/dev/null || true
+          P4="$(wait_pid "$P3" "$DIR/status-health.json")"
+          npm run status > "$DIR/status-command.json"
+          npm run stop > "$DIR/stop-command.json"
+          for i in {1..20}; do ! kill -0 "$MANAGER_PID" 2>/dev/null && break; sleep 1; done
+          ! kill -0 "$MANAGER_PID" 2>/dev/null
+          printf 'initial=%s\nmanual=%s\ncrash=%s\nhealth=%s\n' "$P1" "$P2" "$P3" "$P4" | tee "$DIR/pids.txt"
+          trap - EXIT
       - if: always()
         uses: actions/upload-artifact@v7
-        with: { name: 'security-study-restart-${{ github.run_number }}', path: '${{ runner.temp }}/restart-logs', if-no-files-found: warn, retention-days: 14 }
+        with:
+          name: security-study-restart-${{ github.run_number }}
+          path: ${{ runner.temp }}/restart-logs
+          if-no-files-found: warn
+          retention-days: 14
 
   browser-quality:
     name: 3. Playwright, accessibility and Lighthouse
@@ -88,10 +129,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: '${{ env.NODE_VERSION }}' }
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: security-study-platform/package-lock.json
       - working-directory: ${{ env.WORKDIR }}
         run: |
-          npm install --no-audit --no-fund
+          npm ci --no-audit --no-fund
           npx playwright install --with-deps chromium
       - working-directory: ${{ env.WORKDIR }}
         run: npm run test:e2e
@@ -100,14 +144,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node server.js > "${RUNNER_TEMP}/lighthouse-server.log" 2>&1 & PID=$!; trap 'kill "$PID" 2>/dev/null || true' EXIT
+          node server.js > "${RUNNER_TEMP}/lighthouse-server.log" 2>&1 &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
           for i in {1..20}; do curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1 && break; sleep 1; done
-          export CHROME_PATH="$(find "$HOME/.cache/ms-playwright" -type f -name chrome 2>/dev/null | head -1)"; test -n "$CHROME_PATH"
+          export CHROME_PATH="$(find "$HOME/.cache/ms-playwright" -type f -name chrome 2>/dev/null | head -1)"
+          test -n "$CHROME_PATH"
           npx lighthouse http://127.0.0.1:3000 --chrome-flags='--headless --no-sandbox' --only-categories=performance,accessibility,best-practices,seo --output=json --output-path="${RUNNER_TEMP}/lighthouse.json" --quiet
           node - "${RUNNER_TEMP}/lighthouse.json" <<'NODE'
-          const fs=require('fs');const r=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));const min={performance:.70,accessibility:.85,'best-practices':.85,seo:.80};for(const[k,v]of Object.entries(min)){const score=r.categories[k].score;console.log(k,score);if(score<v)process.exitCode=1;}
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const min={performance:.70,accessibility:.85,'best-practices':.85,seo:.80};
+          for(const[k,v]of Object.entries(min)){
+            const score=r.categories[k].score;
+            console.log(k,score);
+            if(score<v)process.exitCode=1;
+          }
           NODE
-          trap - EXIT; kill "$PID" 2>/dev/null || true
+          trap - EXIT
+          kill "$PID" 2>/dev/null || true
       - if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -127,25 +182,37 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
-        with: { node-version: '${{ env.NODE_VERSION }}' }
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: security-study-platform/package-lock.json
       - working-directory: ${{ env.WORKDIR }}
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - working-directory: ${{ env.WORKDIR }}
         run: npm run sbom > sbom.cdx.json
       - uses: actions/upload-artifact@v7
-        with: { name: 'security-study-sbom-${{ github.run_number }}', path: '${{ env.WORKDIR }}/sbom.cdx.json', if-no-files-found: error, retention-days: 30 }
+        with:
+          name: security-study-sbom-${{ github.run_number }}
+          path: ${{ env.WORKDIR }}/sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 30
 
   container:
     name: 5. Docker build and optional GHCR publish
     needs: quality
     runs-on: ubuntu-latest
-    permissions: { contents: read, packages: write }
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
       - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v4
-        with: { registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}' }
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v7
         with:
           context: ./security-study-platform
@@ -161,27 +228,41 @@ jobs:
     needs: [quality, browser-quality, restart-smoke]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions: { contents: read, id-token: write, attestations: write }
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/download-artifact@v8
-        with: { name: '${{ env.SITE_ARTIFACT }}', path: '${{ runner.temp }}/homepage' }
+        with:
+          name: ${{ env.SITE_ARTIFACT }}
+          path: ${{ runner.temp }}/homepage
       - run: tar -C "${RUNNER_TEMP}/homepage" -czf "${RUNNER_TEMP}/security-study-homepage.tgz" .
       - uses: actions/attest@v4
-        with: { subject-path: '${{ runner.temp }}/security-study-homepage.tgz' }
+        with:
+          subject-path: ${{ runner.temp }}/security-study-homepage.tgz
 
   deploy-pages:
     name: 7. Deploy verified homepage to GitHub Pages
     needs: [quality, browser-quality, restart-smoke, sbom, container]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions: { contents: read, pages: write, id-token: write }
-    environment: { name: github-pages, url: '${{ steps.deployment.outputs.page_url }}' }
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/download-artifact@v8
-        with: { name: '${{ env.SITE_ARTIFACT }}', path: '${{ runner.temp }}/homepage' }
+        with:
+          name: ${{ env.SITE_ARTIFACT }}
+          path: ${{ runner.temp }}/homepage
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
-        with: { path: '${{ runner.temp }}/homepage' }
+        with:
+          path: ${{ runner.temp }}/homepage
       - id: deployment
         uses: actions/deploy-pages@v5
 
@@ -190,12 +271,19 @@ jobs:
     needs: [quality, restart-smoke, browser-quality, sbom, container]
     if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions: { contents: read, issues: write }
+    permissions:
+      contents: read
+      issues: write
     steps:
-      - env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           TITLE='[자동알림] Security Study Platform main CI 실패'
           BODY="Workflow: ${GITHUB_WORKFLOW}\nRun: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\nCommit: ${GITHUB_SHA}"
           NUMBER="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')"
-          if [ -n "$NUMBER" ]; then gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$BODY"; else gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"; fi
+          if [ -n "$NUMBER" ]; then
+            gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
