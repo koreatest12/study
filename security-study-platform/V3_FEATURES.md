@@ -34,6 +34,11 @@
 - GitHub artifact attestation on trusted main builds
 - Security headers and local-only restart control API
 
+## Reproducible Build
+- `package-lock.json` lockfileVersion 3 committed
+- CI uses `npm ci` with npm dependency cache
+- Docker image uses `package.json` + `package-lock.json` and `npm ci --omit=dev`
+
 ## CI/CD
 - Build and verify homepage on every PR/feature branch
 - Build Docker image on every PR
