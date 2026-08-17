@@ -1,13 +1,37 @@
 version: 2
 
+# Dependabot 설정 파일은 반드시 .github/dependabot.yml 에 위치해야 합니다.
+# .github/workflows 아래에 두면 GitHub Actions 워크플로로 해석되어 오류가 발생합니다.
+
 updates:
-  # 1) Root Node.js service
+  # 1. GitHub Actions 의존성 관리
+  - package-ecosystem: "github-actions"
+    directory: "/" # .github/workflows 파일을 자동으로 스캔합니다.
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:30"
+      timezone: "Asia/Seoul"
+    target-branch: "main"
+    open-pull-requests-limit: 10
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "ci(deps)"
+
+  # 2. 루트 JavaScript/Node.js(npm) 서비스 의존성 관리
   - package-ecosystem: "npm"
-    directory: "/"
+    directory: "/" # 루트 package.json 스캔
     schedule:
       interval: "daily"
       time: "05:10"
       timezone: "Asia/Seoul"
+    target-branch: "main"
     open-pull-requests-limit: 10
     groups:
       root-production-minor-patch:
@@ -20,21 +44,18 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    cooldown:
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
     commit-message:
       prefix: "deps(root)"
       prefix-development: "deps-dev(root)"
 
-  # 2) Security Study Platform Node.js/PWA service
+  # 3. Security Study Platform JavaScript/Node.js(npm) 의존성 관리
   - package-ecosystem: "npm"
     directory: "/security-study-platform"
     schedule:
       interval: "daily"
       time: "05:20"
       timezone: "Asia/Seoul"
+    target-branch: "main"
     open-pull-requests-limit: 15
     groups:
       platform-production-minor-patch:
@@ -47,36 +68,11 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    cooldown:
-      semver-major-days: 7
-      semver-minor-days: 3
-      semver-patch-days: 1
     commit-message:
       prefix: "deps(platform)"
       prefix-development: "deps-dev(platform)"
 
-  # 3) All GitHub Actions used by .github/workflows
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "05:30"
-      timezone: "Asia/Seoul"
-    open-pull-requests-limit: 10
-    groups:
-      github-actions-minor-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
-    cooldown:
-      default-days: 2
-    commit-message:
-      prefix: "ci(deps)"
-
-  # 4) Container base images for the Security Study Platform
+  # 4. Security Study Platform Docker Base Image 관리
   - package-ecosystem: "docker"
     directory: "/security-study-platform"
     schedule:
@@ -84,6 +80,7 @@ updates:
       day: "monday"
       time: "05:40"
       timezone: "Asia/Seoul"
+    target-branch: "main"
     open-pull-requests-limit: 5
     groups:
       docker-minor-patch:
@@ -92,7 +89,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    cooldown:
-      default-days: 3
     commit-message:
       prefix: "deps(docker)"
+
+# 5. Python(pip) 의존성 관리 템플릿
+# 현재 저장소에는 requirements.txt / pyproject.toml / Pipfile 등
+# Dependabot이 읽을 Python manifest가 없어 비활성화합니다.
+# Python 의존성 파일을 추가하면 아래 주석을 제거해 활성화하세요.
+#
+#  - package-ecosystem: "pip"
+#    directory: "/"
+#    schedule:
+#      interval: "weekly"
+#    target-branch: "main"
