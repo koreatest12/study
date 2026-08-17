@@ -1,58 +1,79 @@
-name: CI/CD - Information Server Setup and Deployment (Final)
+name: CI/CD - Information Server Continuous Build & Deployment
 
 on:
   push:
     branches:
       - main
+      - 'agent/**'
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # 6시간마다 기본 브랜치에서 배포 상태를 재검증하고 최신 이미지를 재생성합니다.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: information-server-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.13'
+  JAVA_VERSION: '17'
+  DEPLOY_ARTIFACT: information-server-deployment-${{ github.run_id }}
+  GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/information-server
 
 jobs:
   # ====================================================================
-  # 1. CI (지속적 통합) - 파일 강제 생성, 빌드 및 아티팩트 준비
+  # 1. CI - 실행 가능한 서비스, 배포 패키지, Docker Compose 생성
   # ====================================================================
   ci_build:
+    name: 1. Build and validate deployment package
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: 📦 레포지토리 체크아웃
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
-      # --- 🛠️ 모든 필수 디렉토리 및 파일 대량 생성 ---
-      - name: 📁 프로젝트 파일 구조 및 리소스 대량 생성
+      - name: 📁 서비스 및 배포 파일 생성
+        shell: bash
         run: |
-          echo "GitHub Actions Runner의 워크스페이스 경로: $GITHUB_WORKSPACE"
+          set -euo pipefail
 
-          # 1. Maven 캐시 오류 해결을 위한 Spring Boot 필수 파일 강제 생성
           mkdir -p spring-boot-app/src/main/java/com/collector/server
           mkdir -p spring-boot-app/src/main/resources
           mkdir -p spring-boot-app/src/test/java/com/collector/server
+          mkdir -p python-server
+          mkdir -p artifacts/config/network artifacts/logs artifacts/homepage
+          mkdir -p deployment
 
-          # 최소 pom.xml 생성
           cat << 'EOF' > spring-boot-app/pom.xml
           <project xmlns="http://maven.apache.org/POM/4.0.0"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-              <modelVersion>4.0.0</modelVersion>
-              <groupId>com.data.collector</groupId>
-              <artifactId>study-server-app</artifactId>
-              <version>1.0.0</version>
-              <packaging>jar</packaging>
-              <properties>
-                <java.version>17</java.version>
-                <maven.compiler.source>17</maven.compiler.source>
-                <maven.compiler.target>17</maven.compiler.target>
-                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-              </properties>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>com.data.collector</groupId>
+            <artifactId>study-server-app</artifactId>
+            <version>1.0.0</version>
+            <packaging>jar</packaging>
+            <properties>
+              <maven.compiler.source>17</maven.compiler.source>
+              <maven.compiler.target>17</maven.compiler.target>
+              <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+            </properties>
           </project>
           EOF
 
-          # 2. Spring Boot 코드 및 설정 파일 대량 생성
           cat << 'EOF' > spring-boot-app/src/main/java/com/collector/server/Application.java
           package com.collector.server;
 
           public class Application {
               public static void main(String[] args) {
-                  System.out.println("Study server application placeholder started.");
+                  System.out.println("Study information service is ready.");
               }
           }
           EOF
@@ -62,260 +83,389 @@ jobs:
           spring.application.name=study-server-app
           EOF
 
-          cat << 'EOF' > spring-boot-app/src/main/resources/application-prod.yml
-          spring:
-            profiles:
-              active: prod
-          server:
-            port: 8080
-          EOF
-
-          cat << 'EOF' > spring-boot-app/src/test/java/com/collector/server/ApplicationTests.java
-          package com.collector.server;
-
-          public class ApplicationTests {
-              public void contextLoads() {
-                  System.out.println("test placeholder");
-              }
-          }
-          EOF
-
-          # 3. Python 서버 필수 파일 대량 생성
-          mkdir -p python-server
           cat << 'EOF' > python-server/server.py
-          from flask import Flask, jsonify
+          import os
+          from pathlib import Path
+          from flask import Flask, jsonify, send_from_directory
 
-          app = Flask(__name__)
+          homepage_dir = Path(os.environ.get("HOMEPAGE_DIR", "/app/homepage"))
+          app = Flask(__name__, static_folder=None)
 
-          @app.route('/health')
+          @app.get("/")
+          def index():
+              return send_from_directory(homepage_dir, "index.html")
+
+          @app.get("/health")
           def health():
-              return jsonify({"status": "ok", "service": "python-study-server"})
+              return jsonify({"status": "ok", "service": "information-server"})
 
-          if __name__ == '__main__':
-              app.run(host='0.0.0.0', port=5000)
+          @app.get("/api/status")
+          def status():
+              return jsonify({
+                  "status": "running",
+                  "service": "information-server",
+                  "deployment": os.environ.get("DEPLOYMENT_VERSION", "unknown")
+              })
+
+          if __name__ == "__main__":
+              app.run(host="0.0.0.0", port=5000)
           EOF
 
           cat << 'EOF' > python-server/requirements.txt
-          flask
-          requests
+          Flask>=3.1,<4
+          requests>=2.32,<3
           EOF
 
-          # 4. 아티팩트 및 리소스 파일 대량 생성
-          mkdir -p ./artifacts/config/network
-          mkdir -p ./artifacts/logs
-          mkdir -p ./artifacts/homepage
-          echo "Data Collection Server Configuration: SUCCESS" > ./artifacts/config/server_config.txt
-          echo "Initial Log: $(date)" > ./artifacts/logs/init.log
-          cat << 'EOF' > ./artifacts/homepage/index.html
+          cat << EOF > artifacts/config/server_config.txt
+          Data Collection Server Configuration: SUCCESS
+          Repository: ${GITHUB_REPOSITORY}
+          Commit: ${GITHUB_SHA}
+          Run: ${GITHUB_RUN_ID}
+          EOF
+
+          cat << EOF > artifacts/config/network/firewall.txt
+          Allow SSH: 22/tcp (external deployment only)
+          Allow HTTP: 8080/tcp
+          Container service: 5000/tcp
+          EOF
+
+          printf 'Deployment generated at %s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > artifacts/logs/init.log
+
+          cat << EOF > artifacts/homepage/index.html
           <!doctype html>
           <html lang="ko">
           <head>
             <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Information Server Deployment</title>
+            <style>
+              body{font-family:system-ui,sans-serif;max-width:880px;margin:60px auto;padding:0 24px;background:#08111f;color:#e7eef8}
+              article{padding:28px;border:1px solid #29415f;border-radius:18px;background:#0f1c2e}
+              code{color:#8dd6ff} .ok{color:#74e39a}
+            </style>
           </head>
           <body>
-            <h1>정보 수집 서버 배포 페이지</h1>
-            <p>GitHub Actions artifact deployment package generated successfully.</p>
+            <article>
+              <h1>정보 수집 서버</h1>
+              <p class="ok">배포 패키지 생성 및 검증 완료</p>
+              <p>Repository: <code>${GITHUB_REPOSITORY}</code></p>
+              <p>Commit: <code>${GITHUB_SHA}</code></p>
+              <p>Health: <code>/health</code> · Status: <code>/api/status</code></p>
+            </article>
           </body>
           </html>
           EOF
-          echo "모든 필수 파일 및 디렉토리 대량 생성 완료."
 
-      # --- 🐍 Python 환경 설정 ---
-      - name: 🐍 Python 3.11 설정
+          cat << 'EOF' > deployment/Dockerfile
+          FROM python:3.13-slim
+          WORKDIR /app
+          ENV PYTHONDONTWRITEBYTECODE=1 \
+              PYTHONUNBUFFERED=1 \
+              HOMEPAGE_DIR=/app/homepage
+          COPY python-server/requirements.txt /app/requirements.txt
+          RUN pip install --no-cache-dir -r /app/requirements.txt
+          COPY python-server/server.py /app/server.py
+          COPY artifacts/homepage /app/homepage
+          EXPOSE 5000
+          HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+            CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=4)"
+          USER 65534
+          CMD ["python", "/app/server.py"]
+          EOF
+
+          cat << 'EOF' > deployment/docker-compose.yml
+          services:
+            information-server:
+              build:
+                context: ..
+                dockerfile: deployment/Dockerfile
+              image: information-server:local
+              container_name: information-server
+              restart: unless-stopped
+              environment:
+                DEPLOYMENT_VERSION: ${DEPLOYMENT_VERSION:-local}
+              ports:
+                - "${APP_PORT:-8080}:5000"
+          EOF
+
+          echo "✅ 서비스/배포 구조 생성 완료"
+
+      - name: 🐍 Python 설정 및 검증
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: 🐍 Python 종속성 설치 검증
+      - name: 🐍 Python 서비스 검증
+        shell: bash
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
           pip install -r python-server/requirements.txt
           python -m py_compile python-server/server.py
-          echo "Python 서버 파일 검증 완료."
 
-      # --- ☕ Java/Spring Boot 환경 설정 ---
       - name: ☕ Java 17 및 Maven 설정
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          java-package: jdk
-          check-latest: false
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: ${{ secrets.GITHUB_TOKEN }}
-          overwrite-settings: true
-          cache-dependency-path: 'spring-boot-app/pom.xml'
+          cache-dependency-path: spring-boot-app/pom.xml
 
-      - name: ☕ Spring Boot 빌드 및 타겟 JAR 생성
-        run: |
-          echo "Building Spring Boot application..."
-          cd spring-boot-app
-          mvn -q -DskipTests package || true
-          cd ..
-          mkdir -p spring-boot-app/target
-          if ! ls spring-boot-app/target/*.jar >/dev/null 2>&1; then
-            echo "dummy-server.jar" > spring-boot-app/target/dummy-server.jar
-          fi
-          echo "Spring Boot 빌드 및 타겟 파일 준비 완료."
+      - name: ☕ Java 서비스 빌드
+        working-directory: spring-boot-app
+        run: mvn -B -q -DskipTests package
 
-      - name: ✅ CI 산출물 검증
+      - name: ✅ 배포 패키지 검증
+        shell: bash
         run: |
-          test -f spring-boot-app/pom.xml
+          set -euo pipefail
+          test -f spring-boot-app/target/study-server-app-1.0.0.jar
           test -f python-server/server.py
-          test -f artifacts/config/server_config.txt
+          test -f python-server/requirements.txt
           test -f artifacts/homepage/index.html
-          find spring-boot-app -maxdepth 4 -type f | sort
-          find artifacts -type f | sort
-          echo "CI 산출물 검증 완료."
+          test -f deployment/Dockerfile
+          test -f deployment/docker-compose.yml
+          grep -q "Allow HTTP: 8080/tcp" artifacts/config/network/firewall.txt
+          echo "✅ 모든 배포 산출물 검증 완료"
 
-      # --- 📤 빌드 결과물 업로드 ---
-      - name: 📤 배포 패키지 업로드
-        uses: actions/upload-artifact@v5
+      - name: 📤 배포 패키지 Artifact 업로드
+        uses: actions/upload-artifact@v7
         with:
-          name: server-deployment-package
+          name: ${{ env.DEPLOY_ARTIFACT }}
           path: |
-            ./artifacts/
-            ./spring-boot-app/target/*.jar
-            ./python-server/
+            artifacts/
+            spring-boot-app/target/*.jar
+            python-server/
+            deployment/
+          if-no-files-found: error
+          retention-days: 30
 
   # ====================================================================
-  # 2. CD (지속적 배포) - 인프라 설정 및 유효성 검증
+  # 2. GitHub 기본 배포 - 외부 Secrets 없이 항상 GHCR에 배포 가능
   # ====================================================================
-  cd_deploy:
+  github_publish:
+    name: 2. Publish tested service image to GHCR
     needs: ci_build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 배포 패키지 다운로드
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ env.DEPLOY_ARTIFACT }}
+          path: deploy-package
+
+      - name: 🔐 GHCR 로그인
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🐳 이미지 빌드, 실행, Health Check, Push
+        shell: bash
+        env:
+          DEPLOYMENT_VERSION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          IMAGE="${GHCR_IMAGE}"
+          SHA_TAG="${IMAGE}:${GITHUB_SHA}"
+          LATEST_TAG="${IMAGE}:latest"
+
+          docker build --pull \
+            -f deploy-package/deployment/Dockerfile \
+            -t "$SHA_TAG" \
+            deploy-package
+
+          CID="$(docker run -d -p 18080:5000 -e DEPLOYMENT_VERSION="$DEPLOYMENT_VERSION" "$SHA_TAG")"
+          cleanup(){ docker rm -f "$CID" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:18080/health >/dev/null; then
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              docker logs "$CID" || true
+              exit 1
+            fi
+            sleep 1
+          done
+
+          curl -fsS http://127.0.0.1:18080/api/status
+          cleanup
+          trap - EXIT
+
+          docker tag "$SHA_TAG" "$LATEST_TAG"
+          docker push "$SHA_TAG"
+          docker push "$LATEST_TAG"
+
+          {
+            echo '## GitHub 상시 배포'
+            echo ''
+            echo "- GHCR: \`$LATEST_TAG\`"
+            echo "- Immutable tag: \`$SHA_TAG\`"
+            echo '- Container health check: success'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ====================================================================
+  # 3. 외부 서버 배포 - Secrets가 있을 때만 추가로 실제 호스트에 반영
+  # ====================================================================
+  external_deploy:
+    name: 3. Optional external server deployment
+    needs: ci_build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
       DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
-      DEPLOY_HOST_IP_OR_DOMAIN: ${{ secrets.DEPLOY_HOST_IP_OR_DOMAIN }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
 
     steps:
       - name: 📥 배포 패키지 다운로드
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
-          name: server-deployment-package
-          path: ./deploy-package
+          name: ${{ env.DEPLOY_ARTIFACT }}
+          path: deploy-package
 
-      # --- 🛡️ 방화벽 및 가상 네트워크 정보 생성/설정 ---
-      - name: 🌐 인프라 최종 정보 생성
-        run: |
-          echo "Virtual Network Final: VNet-Collector-PROD" > ./deploy-package/network_info_final.txt
-          echo "Firewall Final Rule: Allow SSH (22), Allow HTTP (8080)" >> ./deploy-package/network_info_final.txt
-          echo "방화벽/가상 네트워크 최종 정보 파일 생성 완료"
-
-      - name: 🔐 배포 Secrets 사전 검사
+      - name: 🔐 외부 배포 가능 여부 검사
         id: deploy_check
         shell: bash
         run: |
-          echo "--- 배포 Secrets 상태 점검 ---"
-          CAN_DEPLOY="true"
-
-          if [ -z "$DEPLOY_HOST" ]; then
-            echo "DEPLOY_HOST 없음"
-            CAN_DEPLOY="false"
-          fi
-
-          if [ -z "$DEPLOY_USER" ]; then
-            echo "DEPLOY_USER 없음"
-            CAN_DEPLOY="false"
-          fi
-
+          set -euo pipefail
+          CAN_DEPLOY=true
+          [ -n "$DEPLOY_HOST" ] || CAN_DEPLOY=false
+          [ -n "$DEPLOY_USER" ] || CAN_DEPLOY=false
           if [ -z "$DEPLOY_KEY" ] && [ -z "$DEPLOY_PASSWORD" ]; then
-            echo "DEPLOY_KEY 또는 DEPLOY_PASSWORD 없음"
-            CAN_DEPLOY="false"
+            CAN_DEPLOY=false
           fi
 
-          if [ "$CAN_DEPLOY" = "true" ]; then
-            echo "✅ 배포에 필요한 Secrets가 준비되었습니다."
+          if [ "$CAN_DEPLOY" = true ]; then
             echo "can_deploy=true" >> "$GITHUB_OUTPUT"
+            echo "✅ 외부 서버 배포 자격 정보 확인 완료"
           else
-            echo "⚠️ 배포 Secrets가 부족하여 SCP 배포 단계는 건너뜁니다."
             echo "can_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ 외부 서버 Secrets 미설정: 외부 SCP만 생략합니다. GHCR 배포는 별도 Job에서 계속 수행됩니다."
           fi
 
-      - name: 🔑 DEPLOY_KEY 임시 파일 생성 및 검증
-        id: deploy_key_file
+      - name: 🔑 SSH Key 준비
+        id: ssh_key
         if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY != ''
         shell: bash
         run: |
+          set -euo pipefail
           KEY_FILE="$RUNNER_TEMP/deploy_key"
           printf '%s\n' "$DEPLOY_KEY" > "$KEY_FILE"
           chmod 600 "$KEY_FILE"
+          ssh-keygen -y -f "$KEY_FILE" >/dev/null
+          echo "path=$KEY_FILE" >> "$GITHUB_OUTPUT"
 
-          if ssh-keygen -y -f "$KEY_FILE" > /dev/null 2>&1; then
-            echo "✅ DEPLOY_KEY 개인키 형식 검증 완료"
-          else
-            echo "❌ DEPLOY_KEY 형식이 올바르지 않습니다. GitHub Secret에는 공개키가 아니라 개인키 전체 내용을 넣어야 합니다."
-            exit 1
-          fi
-
-          echo "key_path=$KEY_FILE" >> "$GITHUB_OUTPUT"
-
-      # --- 💻 서버 배포 및 홈페이지 설치: SSH Key 파일 방식 ---
-      - name: 💻 서버에 파일 배포 - SSH Key 파일 방식
-        if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY != ''
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.DEPLOY_HOST }}
-          username: ${{ env.DEPLOY_USER }}
-          key_path: ${{ steps.deploy_key_file.outputs.key_path }}
-          source: "./deploy-package/*"
-          target: "/var/www/data-server/"
-          overwrite: true
-          debug: true
-
-      # --- 💻 서버 배포 및 홈페이지 설치: Password 방식 ---
-      - name: 💻 서버에 파일 배포 - Password 방식
+      - name: 🔧 Password SSH 도구 준비
         if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY == '' && env.DEPLOY_PASSWORD != ''
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ env.DEPLOY_HOST }}
-          username: ${{ env.DEPLOY_USER }}
-          password: ${{ env.DEPLOY_PASSWORD }}
-          source: "./deploy-package/*"
-          target: "/var/www/data-server/"
-          overwrite: true
-          debug: true
-
-      - name: ⚠️ 배포 스킵 안내
-        if: steps.deploy_check.outputs.can_deploy == 'false'
         run: |
-          echo "SCP 배포를 건너뛰었습니다."
-          echo "GitHub Repository Settings > Secrets and variables > Actions 에 아래 중 하나를 설정하세요."
-          echo "필수: DEPLOY_HOST, DEPLOY_USER"
-          echo "인증: DEPLOY_KEY 또는 DEPLOY_PASSWORD"
-          echo "선택: DEPLOY_HOST_IP_OR_DOMAIN"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq sshpass
 
-      # --- ✅ 정보 정확성 및 네트워크 유효성 검증 ---
-      - name: ✅ 생성된 정보 정확성 검증 및 선택적 Ping 테스트
+      - name: 🚀 SSH Key 방식 외부 배포 및 재기동
+        if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY != ''
+        shell: bash
+        env:
+          KEY_FILE: ${{ steps.ssh_key.outputs.path }}
         run: |
-          echo "--- 생성된 설정 파일 목록 확인 ---"
-          find ./deploy-package -type f | sort
+          set -euo pipefail
+          TARGET="${DEPLOY_PATH:-/var/www/data-server}"
+          SSH=(ssh -i "$KEY_FILE" -o StrictHostKeyChecking=accept-new "$DEPLOY_USER@$DEPLOY_HOST")
+          SCP=(scp -i "$KEY_FILE" -o StrictHostKeyChecking=accept-new -r)
 
-          if grep -q "Allow HTTP (8080)" ./deploy-package/network_info_final.txt; then
-            echo "✅ 최종 방화벽 정보가 정확하게 생성되었습니다."
-          else
-            echo "❌ 방화벽 정보 검증 실패."
+          "${SSH[@]}" "mkdir -p '$TARGET'"
+          "${SCP[@]}" deploy-package/. "$DEPLOY_USER@$DEPLOY_HOST:$TARGET/"
+          "${SSH[@]}" "cd '$TARGET' && DEPLOYMENT_VERSION='$GITHUB_SHA' docker compose -f deployment/docker-compose.yml up -d --build --remove-orphans"
+          "${SSH[@]}" "cd '$TARGET' && docker compose -f deployment/docker-compose.yml ps"
+          "${SSH[@]}" "cd '$TARGET' && for i in \$(seq 1 20); do docker compose -f deployment/docker-compose.yml exec -T information-server python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health',timeout=3)\" && exit 0; sleep 2; done; docker compose -f deployment/docker-compose.yml logs --tail=100; exit 1"
+
+      - name: 🚀 Password 방식 외부 배포 및 재기동
+        if: steps.deploy_check.outputs.can_deploy == 'true' && env.DEPLOY_KEY == '' && env.DEPLOY_PASSWORD != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="${DEPLOY_PATH:-/var/www/data-server}"
+          export SSHPASS="$DEPLOY_PASSWORD"
+
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p '$TARGET'"
+          sshpass -e scp -o StrictHostKeyChecking=accept-new -r deploy-package/. "$DEPLOY_USER@$DEPLOY_HOST:$TARGET/"
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new "$DEPLOY_USER@$DEPLOY_HOST" "cd '$TARGET' && DEPLOYMENT_VERSION='$GITHUB_SHA' docker compose -f deployment/docker-compose.yml up -d --build --remove-orphans"
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new "$DEPLOY_USER@$DEPLOY_HOST" "cd '$TARGET' && docker compose -f deployment/docker-compose.yml ps"
+          sshpass -e ssh -o StrictHostKeyChecking=accept-new "$DEPLOY_USER@$DEPLOY_HOST" "cd '$TARGET' && for i in \$(seq 1 20); do docker compose -f deployment/docker-compose.yml exec -T information-server python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health',timeout=3)\" && exit 0; sleep 2; done; docker compose -f deployment/docker-compose.yml logs --tail=100; exit 1"
+
+      - name: 📋 외부 배포 상태 요약
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## 외부 서버 배포'
+            echo ''
+            if [ "${{ steps.deploy_check.outputs.can_deploy }}" = 'true' ]; then
+              echo '- Secrets: configured'
+              echo "- Target: \`${DEPLOY_HOST}:${DEPLOY_PATH:-/var/www/data-server}\`"
+              echo '- Deployment method: Docker Compose / restart: unless-stopped'
+            else
+              echo '- Secrets: not configured'
+              echo '- External SCP: skipped by design'
+              echo '- GitHub GHCR deployment remains active'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ====================================================================
+  # 4. 전체 결과 - main에서는 GHCR 배포 성공을 필수 조건으로 사용
+  # ====================================================================
+  deployment_result:
+    name: 4. Continuous deployment result
+    if: always()
+    needs:
+      - ci_build
+      - github_publish
+      - external_deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ 전체 배포 결과 판정
+        shell: bash
+        env:
+          CI_RESULT: ${{ needs.ci_build.result }}
+          GHCR_RESULT: ${{ needs.github_publish.result }}
+          EXTERNAL_RESULT: ${{ needs.external_deploy.result }}
+        run: |
+          {
+            echo '## Continuous deployment result'
+            echo ''
+            echo "- CI package: $CI_RESULT"
+            echo "- GHCR deployment: $GHCR_RESULT"
+            echo "- External server: $EXTERNAL_RESULT"
+            echo "- Event: $GITHUB_EVENT_NAME"
+            echo "- Ref: $GITHUB_REF"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CI_RESULT" != 'success' ]; then
+            echo 'CI package build failed.'
             exit 1
           fi
 
-          TARGET_HOST="$DEPLOY_HOST_IP_OR_DOMAIN"
-          if [ -z "$TARGET_HOST" ]; then
-            TARGET_HOST="$DEPLOY_HOST"
+          if [ "$GITHUB_REF" = 'refs/heads/main' ] && [ "$GITHUB_EVENT_NAME" != 'pull_request' ] && [ "$GHCR_RESULT" != 'success' ]; then
+            echo 'Required GHCR deployment failed.'
+            exit 1
           fi
 
-          if [ -n "$TARGET_HOST" ]; then
-            echo "Testing connectivity to $TARGET_HOST..."
-            if ping -c 4 "$TARGET_HOST"; then
-              echo "✅ Ping 테스트 성공: 서버 연결 확인 완료."
-            else
-              echo "⚠️ Ping 테스트 실패. 서버가 ICMP를 차단했거나 네트워크 접근이 제한되었을 수 있습니다."
-            fi
-          else
-            echo "⚠️ Ping 대상이 없어 Ping 테스트를 건너뜁니다."
+          if [ "$EXTERNAL_RESULT" = 'failure' ]; then
+            echo 'External deployment was configured but failed.'
+            exit 1
           fi
+
+          echo '✅ Continuous deployment pipeline completed.'
