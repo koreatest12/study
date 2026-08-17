@@ -1,17 +1,98 @@
 version: 2
+
 updates:
-  - package-ecosystem: github-actions
-    directory: /
-    schedule: { interval: weekly }
-    groups:
-      github-actions: { patterns: ['*'] }
-  - package-ecosystem: npm
-    directory: /security-study-platform
-    schedule: { interval: daily }
+  # 1) Root Node.js service
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "05:10"
+      timezone: "Asia/Seoul"
     open-pull-requests-limit: 10
     groups:
-      development-tools: { dependency-type: development, update-types: [minor, patch] }
-      production-dependencies: { dependency-type: production, update-types: [minor, patch] }
-  - package-ecosystem: docker
-    directory: /security-study-platform
-    schedule: { interval: weekly }
+      root-production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      root-development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    commit-message:
+      prefix: "deps(root)"
+      prefix-development: "deps-dev(root)"
+
+  # 2) Security Study Platform Node.js/PWA service
+  - package-ecosystem: "npm"
+    directory: "/security-study-platform"
+    schedule:
+      interval: "daily"
+      time: "05:20"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 15
+    groups:
+      platform-production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      platform-development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+    commit-message:
+      prefix: "deps(platform)"
+      prefix-development: "deps-dev(platform)"
+
+  # 3) All GitHub Actions used by .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:30"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 10
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      default-days: 2
+    commit-message:
+      prefix: "ci(deps)"
+
+  # 4) Container base images for the Security Study Platform
+  - package-ecosystem: "docker"
+    directory: "/security-study-platform"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:40"
+      timezone: "Asia/Seoul"
+    open-pull-requests-limit: 5
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    cooldown:
+      default-days: 3
+    commit-message:
+      prefix: "deps(docker)"
