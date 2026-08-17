@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08111f" />
+  <meta name="description" content="정보보안기사 암호학 핵심: AES, RSA, Diffie-Hellman, Hash, HMAC, 전자서명, PKI, 인증서" />
+  <title>암호학 완전정리 · Security Study Platform</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+<header class="hero">
+  <div class="hero-inner">
+    <div>
+      <p class="eyebrow">Certified Information Security Engineer · Cryptography</p>
+      <h1>🔐 암호학 완전정리</h1>
+      <p>정보보안기사 필기·실기와 TLS·인증서·VPN·기술면접까지 연결하는 암호학 학습 페이지입니다.</p>
+    </div>
+    <div class="hero-actions"><a href="index.html">학습 플랫폼으로 돌아가기</a></div>
+  </div>
+</header>
+<main id="main" class="container">
+  <section class="panel">
+    <h2>1. 암호학의 4대 보안 목표</h2>
+    <div class="grid cards">
+      <article><h3>기밀성</h3><p>허가받지 않은 사람이 내용을 읽지 못하도록 암호화합니다.</p></article>
+      <article><h3>무결성</h3><p>데이터 변경·변조 여부를 Hash, MAC 등으로 확인합니다.</p></article>
+      <article><h3>인증</h3><p>사용자·시스템·메시지의 진위를 MAC, 전자서명, 인증서로 확인합니다.</p></article>
+      <article><h3>부인방지</h3><p>송신자가 자신의 행위를 부인하지 못하도록 전자서명을 사용합니다.</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>2. 대칭키 암호와 AES</h2>
+    <p>대칭키 암호는 암호화와 복호화에 동일한 공유 비밀키를 사용합니다. 대표 알고리즘은 AES, DES/3DES, SEED, ARIA이며 RC4는 대표적인 스트림 암호입니다.</p>
+    <div class="topic-list">
+      <article class="topic"><h3>AES-128</h3><p>128bit 블록 · 128bit 키 · 10 Round</p></article>
+      <article class="topic"><h3>AES-192</h3><p>128bit 블록 · 192bit 키 · 12 Round</p></article>
+      <article class="topic"><h3>AES-256</h3><p>128bit 블록 · 256bit 키 · 14 Round</p></article>
+    </div>
+    <p><strong>AES Round:</strong> SubBytes → ShiftRows → MixColumns → AddRoundKey. 마지막 Round에서는 MixColumns를 수행하지 않습니다.</p>
+  </section>
+
+  <section class="panel">
+    <h2>3. 블록 암호 운영 모드</h2>
+    <div class="topic-list">
+      <article class="topic"><h3>ECB</h3><p>각 블록을 독립적으로 암호화합니다. 동일한 평문 블록이 동일한 암호문 블록이 되어 패턴이 노출될 수 있습니다.</p></article>
+      <article class="topic"><h3>CBC</h3><p>현재 평문과 이전 암호문을 XOR 후 암호화합니다. 첫 블록에는 IV가 필요합니다.</p></article>
+      <article class="topic"><h3>CFB / OFB</h3><p>블록 암호를 스트림 형태로 활용합니다. Feedback과 오류 전파 특성을 구분합니다.</p></article>
+      <article class="topic"><h3>CTR</h3><p>Counter 값을 암호화하여 Key Stream을 만들며 병렬 처리가 가능합니다.</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>4. 공개키 암호</h2>
+    <div class="grid cards">
+      <article><h3>RSA</h3><p>암호화와 전자서명에 활용하며 큰 정수 소인수분해의 어려움에 기반합니다.</p></article>
+      <article><h3>Diffie-Hellman</h3><p>공유 비밀값을 합의하는 방식입니다. 기본형은 상대방 인증을 제공하지 않아 MITM 방어를 위해 인증이 필요합니다.</p></article>
+      <article><h3>ECC</h3><p>타원곡선 이산로그 문제에 기반하며 키 합의와 전자서명 계열에 활용됩니다.</p></article>
+      <article><h3>DSA / ElGamal</h3><p>DSA는 전자서명, ElGamal은 공개키 암호 계열로 분류합니다.</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>5. RSA 계산 순서</h2>
+    <ol>
+      <li>서로 다른 소수 p, q 선택</li>
+      <li>n = p × q</li>
+      <li>φ(n) = (p-1)(q-1)</li>
+      <li>gcd(e, φ(n)) = 1인 e 선택</li>
+      <li>e × d ≡ 1 (mod φ(n))을 만족하는 d 계산</li>
+    </ol>
+    <p><strong>공개키:</strong> (e, n) · <strong>개인키:</strong> (d, n)</p>
+    <p><strong>암호화:</strong> C = M<sup>e</sup> mod n · <strong>복호화:</strong> M = C<sup>d</sup> mod n</p>
+  </section>
+
+  <section class="panel">
+    <h2>6. Hash · MAC · HMAC</h2>
+    <div class="topic-list">
+      <article class="topic"><h3>Hash</h3><p>임의 길이 입력을 일정 길이 Digest로 변환합니다. MD5와 SHA-1은 충돌 취약성 때문에 현대 보안 용도로 사용하면 안 됩니다.</p></article>
+      <article class="topic"><h3>Birthday Attack</h3><p>이상적인 n비트 해시의 충돌 공격 복잡도는 대략 2^(n/2)입니다.</p></article>
+      <article class="topic"><h3>MAC / HMAC</h3><p>비밀키를 사용해 메시지의 무결성과 인증을 제공합니다. 공유키 방식이므로 전자서명과 같은 부인방지는 제공하지 않습니다.</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>7. 전자서명 키 사용 방향</h2>
+    <div class="grid cards">
+      <article><h3>기밀성 암호화</h3><p><strong>수신자의 공개키</strong>로 암호화 → <strong>수신자의 개인키</strong>로 복호화</p></article>
+      <article><h3>전자서명</h3><p><strong>송신자의 개인키</strong>로 서명 → <strong>송신자의 공개키</strong>로 검증</p></article>
+    </div>
+    <p>전자서명은 주로 인증 + 무결성 + 부인방지를 제공합니다.</p>
+  </section>
+
+  <section class="panel">
+    <h2>8. PKI · X.509 · 인증서 상태</h2>
+    <div class="topic-list">
+      <article class="topic"><h3>CA</h3><p>인증서를 발급하고 서명합니다.</p></article>
+      <article class="topic"><h3>RA</h3><p>인증서 신청자의 신원을 확인하고 등록을 지원합니다.</p></article>
+      <article class="topic"><h3>X.509</h3><p>주체의 신원 정보와 공개키를 연결하는 대표적인 인증서 표준입니다.</p></article>
+      <article class="topic"><h3>CRL / OCSP</h3><p>CRL은 폐기 인증서 목록, OCSP는 인증서 상태를 온라인으로 확인하는 방식입니다.</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>9. Salt와 비밀번호 저장</h2>
+    <p>사용자마다 고유한 Salt를 적용하면 동일 비밀번호의 저장값이 같아지는 것을 막고 Rainbow Table 같은 사전 계산 공격을 어렵게 합니다. 비밀번호 저장에는 일반 SHA-256 단독 사용보다 PBKDF2, bcrypt, scrypt, Argon2 같은 비밀번호 해싱/KDF를 사용합니다.</p>
+  </section>
+
+  <section class="panel">
+    <h2>10. 암호 공격 모델</h2>
+    <div class="grid cards">
+      <article><h3>COA</h3><p>암호문만 알고 있는 공격</p></article>
+      <article><h3>KPA</h3><p>일부 평문과 대응 암호문을 알고 있는 공격</p></article>
+      <article><h3>CPA</h3><p>원하는 평문을 선택해 암호문을 얻을 수 있는 공격</p></article>
+      <article><h3>CCA</h3><p>원하는 암호문을 선택해 복호화 결과를 얻을 수 있는 공격</p></article>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>11. 정보보안기사 핵심 암기</h2>
+    <ul>
+      <li>AES → 대칭키 · 128bit 블록</li>
+      <li>RSA → 공개키 · 소인수분해</li>
+      <li>Diffie-Hellman → 키 합의</li>
+      <li>ECC → 타원곡선 이산로그 문제</li>
+      <li>HMAC → 무결성 + 메시지 인증</li>
+      <li>전자서명 → 인증 + 무결성 + 부인방지</li>
+      <li>CBC → 첫 블록에 IV 필요</li>
+      <li>ECB → 동일 평문 블록 패턴 노출 위험</li>
+      <li>CRL → 인증서 폐기 목록 · OCSP → 인증서 상태 확인</li>
+    </ul>
+  </section>
+
+  <section class="panel">
+    <h2>12. 실기·면접 학습 순서</h2>
+    <p><strong>정의 → 목적 → 원리 → 취약점/주의점 → 대응 → 실무 연결</strong> 순서로 답안을 구성합니다.</p>
+    <ol>
+      <li>대칭키·공개키 차이</li>
+      <li>AES / DES / RSA / Diffie-Hellman</li>
+      <li>Hash / MAC / HMAC / 전자서명</li>
+      <li>PKI / X.509 / CRL / OCSP</li>
+      <li>ECB / CBC / CFB / OFB / CTR</li>
+      <li>Birthday Attack과 공격 모델</li>
+      <li>RSA 계산 문제</li>
+      <li>TLS·VPN·인증서·비밀번호 저장 실무 연결</li>
+    </ol>
+  </section>
+</main>
+<footer>Security Study Platform v3 · Cryptography Study Guide</footer>
+</body>
+</html>
