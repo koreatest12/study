@@ -1,53 +1,282 @@
 version: 2
 
-# Dependabot 설정 파일입니다.
-# 주의: 이 파일은 .github/dependabot.yml 위치에 있어야 합니다.
-# .github/workflows/dependabot.yml에 두면 GitHub Actions 워크플로우로 인식되어 오류가 발생합니다.
+# ============================================================
+# Dependabot 통합 의존성 관리 설정
+#
+# 반드시 아래 경로에 저장:
+# .github/dependabot.yml
+#
+# 절대 아래에 저장하지 않음:
+# .github/workflows/dependabot.yml
+#
+# 관리 대상
+# 1. GitHub Actions
+# 2. Root Node.js / npm
+# 3. Security Study Platform / npm
+# 4. Docker Base Image
+# 5. Python / pip
+# 6. Java / Maven
+# ============================================================
 
 updates:
-  # 1. GitHub Actions 의존성 관리
+
+  # ==========================================================
+  # 1. GitHub Actions 전체 의존성 관리
+  # ==========================================================
   - package-ecosystem: "github-actions"
     directory: "/"
+
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "05:30"
+      timezone: "Asia/Seoul"
+
     target-branch: "main"
-    open-pull-requests-limit: 5
+
+    open-pull-requests-limit: 10
+
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
     labels:
       - "dependencies"
       - "github-actions"
 
-  # 2. JavaScript / Node.js 의존성 관리
+    commit-message:
+      prefix: "ci(deps)"
+
+    cooldown:
+      default-days: 2
+
+
+  # ==========================================================
+  # 2. Root Node.js / npm 서비스
+  #
+  # 관리:
+  # /package.json
+  # 향후 /package-lock.json 생성 시 lockfile도 함께 관리
+  # ==========================================================
   - package-ecosystem: "npm"
     directory: "/"
+
     schedule:
       interval: "daily"
+      time: "05:10"
+      timezone: "Asia/Seoul"
+
     target-branch: "main"
+
     open-pull-requests-limit: 10
+
     groups:
-      npm-minor-and-patch:
-        patterns:
-          - "*"
+
+      root-production-minor-patch:
+        dependency-type: "production"
         update-types:
           - "minor"
           - "patch"
+
+      root-development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
     labels:
       - "dependencies"
       - "npm"
 
-  # 3. Python pip 의존성 관리
-  - package-ecosystem: "pip"
-    directory: "/"
+    commit-message:
+      prefix: "deps(root)"
+      prefix-development: "deps-dev(root)"
+
+    cooldown:
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+
+
+  # ==========================================================
+  # 3. Security Study Platform Node.js / npm
+  #
+  # 관리:
+  # /security-study-platform/package.json
+  # /security-study-platform/package-lock.json
+  #
+  # Express
+  # Playwright
+  # ESLint
+  # Lighthouse
+  # Prettier
+  # Vitest
+  # 기타 npm 라이브러리
+  # ==========================================================
+  - package-ecosystem: "npm"
+    directory: "/security-study-platform"
+
+    schedule:
+      interval: "daily"
+      time: "05:20"
+      timezone: "Asia/Seoul"
+
+    target-branch: "main"
+
+    open-pull-requests-limit: 15
+
+    groups:
+
+      platform-production-minor-patch:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+
+      platform-development-minor-patch:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+    labels:
+      - "dependencies"
+      - "npm"
+      - "security-study-platform"
+
+    commit-message:
+      prefix: "deps(platform)"
+      prefix-development: "deps-dev(platform)"
+
+    cooldown:
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+
+
+  # ==========================================================
+  # 4. Docker Base Image 관리
+  #
+  # 관리:
+  # /security-study-platform/Dockerfile
+  #
+  # 예:
+  # node:24-alpine
+  # ==========================================================
+  - package-ecosystem: "docker"
+    directory: "/security-study-platform"
+
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "05:40"
+      timezone: "Asia/Seoul"
+
     target-branch: "main"
+
     open-pull-requests-limit: 5
+
     groups:
-      pip-minor-and-patch:
+      docker-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+
+    labels:
+      - "dependencies"
+      - "docker"
+
+    commit-message:
+      prefix: "deps(docker)"
+
+    cooldown:
+      default-days: 3
+
+
+  # ==========================================================
+  # 5. Python / pip
+  #
+  # 중요:
+  # 아래 경로에 requirements.txt 또는 지원되는 Python
+  # manifest가 실제 Git 저장소에 존재해야 Dependabot이 작동함.
+  #
+  # 권장 위치:
+  # /python-server/requirements.txt
+  # ==========================================================
+  - package-ecosystem: "pip"
+    directory: "/python-server"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:50"
+      timezone: "Asia/Seoul"
+
+    target-branch: "main"
+
+    open-pull-requests-limit: 5
+
+    groups:
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
     labels:
       - "dependencies"
       - "python"
+
+    commit-message:
+      prefix: "deps(python)"
+
+    cooldown:
+      semver-major-days: 7
+      semver-minor-days: 3
+      semver-patch-days: 1
+
+
+  # ==========================================================
+  # 6. Java / Maven
+  #
+  # 중요:
+  # /spring-boot-app/pom.xml 파일이 실제 저장소에
+  # 존재해야 Dependabot이 동작함.
+  # ==========================================================
+  - package-ecosystem: "maven"
+    directory: "/spring-boot-app"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Asia/Seoul"
+
+    target-branch: "main"
+
+    open-pull-requests-limit: 5
+
+    groups:
+      java-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    labels:
+      - "dependencies"
+      - "java"
+
+    commit-message:
+      prefix: "deps(java)"
+
+    cooldown:
+      default-days: 3
