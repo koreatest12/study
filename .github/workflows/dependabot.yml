@@ -1,0 +1,185 @@
+name: Dependabot Service Upgrade Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/dependabot.yml'
+      - '.github/workflows/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'security-study-platform/package.json'
+      - 'security-study-platform/package-lock.json'
+      - 'security-study-platform/Dockerfile'
+  schedule:
+    # Monday 06:30 KST (Sunday 21:30 UTC)
+    - cron: '30 21 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependabot-upgrade-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-dependabot-config:
+    name: Validate Dependabot configuration
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Validate YAML and required ecosystems
+        shell: bash
+        run: |
+          ruby -e "require 'yaml'; c = YAML.safe_load(File.read('.github/dependabot.yml'), aliases: true); abort 'version must be 2' unless c['version'] == 2; ecosystems = c.fetch('updates').map { |u| u['package-ecosystem'] }; %w[npm github-actions docker].each { |e| abort \"missing ecosystem: #{e}\" unless ecosystems.include?(e) }; puts 'Dependabot configuration is valid.'"
+
+      - name: Write configuration summary
+        if: always()
+        run: |
+          {
+            echo '## Dependabot configuration'
+            echo ''
+            echo '- Root npm service: enabled'
+            echo '- Security Study Platform npm service: enabled'
+            echo '- GitHub Actions: enabled'
+            echo '- Docker base images: enabled'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  validate-root-node-service:
+    name: Root Node.js service
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+
+      - name: Install root dependencies
+        run: npm install --no-audit --no-fund --package-lock=false
+
+      - name: Run root tests
+        run: npm test
+
+      - name: Report outdated root dependencies
+        continue-on-error: true
+        run: npm outdated
+
+      - name: Write root service summary
+        if: always()
+        run: |
+          {
+            echo '## Root Node.js service'
+            echo ''
+            echo '- Node.js: 24.x'
+            echo '- Dependency installation completed'
+            echo '- Root data/server tests executed'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  validate-security-study-platform:
+    name: Security Study Platform
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: security-study-platform
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+          cache-dependency-path: security-study-platform/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run platform CI validation
+        run: npm run test:ci
+
+      - name: Run high severity audit gate
+        run: npm run audit:high
+
+      - name: Report outdated platform dependencies
+        continue-on-error: true
+        run: npm outdated
+
+      - name: Write platform summary
+        if: always()
+        run: |
+          {
+            echo '## Security Study Platform'
+            echo ''
+            echo '- npm ci completed'
+            echo '- Syntax / ESLint / unit tests / homepage build executed'
+            echo '- High-severity npm audit gate executed'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  validate-docker-service:
+    name: Docker service image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build Security Study Platform image
+        run: docker build --pull -t security-study-platform:dependency-validation ./security-study-platform
+
+      - name: Inspect image
+        run: docker image inspect security-study-platform:dependency-validation --format '{{.Id}} {{.Size}}'
+
+      - name: Write Docker summary
+        if: always()
+        run: |
+          {
+            echo '## Docker service'
+            echo ''
+            echo '- Base image refresh enabled with --pull'
+            echo '- Security Study Platform container build validated'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  upgrade-validation-result:
+    name: Upgrade validation result
+    if: always()
+    needs:
+      - validate-dependabot-config
+      - validate-root-node-service
+      - validate-security-study-platform
+      - validate-docker-service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when a required validation failed
+        env:
+          CONFIG_RESULT: ${{ needs.validate-dependabot-config.result }}
+          ROOT_RESULT: ${{ needs.validate-root-node-service.result }}
+          PLATFORM_RESULT: ${{ needs.validate-security-study-platform.result }}
+          DOCKER_RESULT: ${{ needs.validate-docker-service.result }}
+        run: |
+          {
+            echo '## Dependency upgrade validation result'
+            echo ''
+            echo "- Dependabot config: $CONFIG_RESULT"
+            echo "- Root Node.js service: $ROOT_RESULT"
+            echo "- Security Study Platform: $PLATFORM_RESULT"
+            echo "- Docker image: $DOCKER_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$CONFIG_RESULT" != 'success' ] || \
+             [ "$ROOT_RESULT" != 'success' ] || \
+             [ "$PLATFORM_RESULT" != 'success' ] || \
+             [ "$DOCKER_RESULT" != 'success' ]; then
+            echo 'One or more dependency upgrade validations failed.'
+            exit 1
+          fi
