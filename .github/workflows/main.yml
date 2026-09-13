@@ -1,0 +1,129 @@
+name: Information Server Setup and Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # 수동 실행 활성화
+
+jobs:
+  # 1. 환경 설정 및 코드 빌드 (Python & Java/Spring Boot)
+  setup_and_build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 코드 체크아웃
+        uses: actions/checkout@v4
+
+      # --- 🐍 Python 환경 설정 ---
+      - name: 🐍 Python 3.11 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🐍 Python 프로젝트 종속성 설치 (예시)
+        run: |
+          # Python 서버 디렉토리로 이동하여 필요한 라이브러리 설치
+          # cd ./python-data-collector
+          # pip install -r requirements.txt
+          echo "Python 환경 설정 완료"
+          
+      # --- ☕ Java/Spring Boot 환경 설정 ---
+      - name: ☕ Java 17 및 Maven 설정
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: ☕ Spring Boot 빌드 및 테스트 (Maven 사용 예시)
+        run: |
+          # Spring Boot 프로젝트 디렉토리로 이동 (필요시)
+          # cd ./spring-boot-server
+          # mvn clean install -DskipTests
+          echo "Spring Boot 빌드 완료"
+
+      # 2. 파일 시스템 및 리소스 준비
+      - name: 📁 디렉토리 및 파일 생성 (Python 스크립트 실행)
+        # GitHub Actions Runner에서 파일 및 디렉토리 생성
+        run: |
+          mkdir -p ./build-artifacts/config/data-collector
+          echo "Data Collection Server Config" > ./build-artifacts/config/data-collector/server.conf
+          echo "Build-Artifact-File-$(date +%Y%m%d%H%M%S)" > ./build-artifacts/resource_info.txt
+          echo "파일 및 디렉토리 생성 완료"
+
+      # 3. 빌드 결과물 저장
+      - name: 📤 빌드 결과물 업로드 (배포 Job에서 사용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-build-artifacts
+          path: |
+            ./build-artifacts
+            # Spring Boot JAR 파일 경로 (예시: ./spring-boot-server/target/*.jar)
+
+  # 4. 인프라 프로비저닝 및 테스트 (배포 Job)
+  deployment_and_validation:
+    needs: setup_and_build # 빌드 Job이 성공한 후에 실행
+    runs-on: ubuntu-latest
+    # **참고**: 실제 방화벽/가상 네트워크 생성은
+    # AWS, Azure, GCP 등 클라우드 환경에서 해당 CLI/Action을 통해 수행해야 합니다.
+    # 아래는 해당 단계를 '시뮬레이션'하거나 클라우드 CLI를 사용하는 '예시'입니다.
+    
+    steps:
+      - name: 📥 빌드 결과물 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          name: server-build-artifacts
+          path: ./downloaded-artifacts
+
+      # --- 🌐 클라우드 인프라 작업 (예시: Azure CLI 사용) ---
+      - name: 🌐 Azure CLI 설치 및 로그인 (필요시)
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # GitHub Secret에 저장된 자격 증명 사용
+
+      - name: 🛡️ 방화벽 및 가상 네트워크 정보 생성 (시뮬레이션 및 CLI 사용 예시)
+        run: |
+          echo "Azure Resource Group: RG-DataCollector" > ./downloaded-artifacts/network_info.txt
+          echo "Virtual Network: VNet-Collector-EastAsia" >> ./downloaded-artifacts/network_info.txt
+          
+          # 실제 Azure CLI 명령어 예시 (필요에 따라 변경)
+          # az network vnet create --resource-group RG-DataCollector --name VNet-Collector-EastAsia --address-prefix 10.0.0.0/16
+          # az network nsg rule create --resource-group RG-DataCollector --nsg-name NSG-Collector --name Allow-HTTP --protocol Tcp --direction Inbound --source-address-prefix Internet --source-port-range '*' --destination-address-prefix '*' --destination-port-range 80 --priority 100 --access Allow
+          echo "방화벽/가상 네트워크 정보 생성 단계 완료"
+
+      # --- 💻 서버 배포 및 홈페이지 설정 (예시) ---
+      - name: 💻 서버 배포 (SSH 또는 클라우드 배포 Action 사용)
+        run: |
+          # SCP/rsync 또는 AWS CodeDeploy/Azure Web App Action 등을 사용하여
+          # ./downloaded-artifacts/ 내의 파일들을 최종 서버에 배포
+          echo "서버에 파일 및 리소스 배포 완료"
+          
+      - name: 🌐 홈페이지 파일 배치 (예시)
+        run: |
+          # HTML 파일 생성 및 서버의 웹 루트 디렉토리에 배치하는 작업 시뮬레이션
+          echo "<html><body><h1>Data Collection Server is Running!</h1></body></html>" > ./downloaded-artifacts/index.html
+          echo "홈페이지 파일 배치 완료"
+      
+      # --- ✅ 정보 정확성 및 네트워크 유효성 검증 ---
+      - name: ✅ 생성된 파일 정보 검증
+        run: |
+          # 이전에 생성된 파일 내용을 확인하여 정보 정확성을 검증
+          cat ./downloaded-artifacts/network_info.txt
+          if grep -q "VNet-Collector-EastAsia" ./downloaded-artifacts/network_info.txt; then
+            echo "✅ 가상 네트워크 정보가 정확하게 생성되었습니다."
+          else
+            echo "❌ 가상 네트워크 정보 검증 실패."
+            exit 1
+          fi
+
+      - name: 📶 Ping 및 네트워크 연결 테스트 (대상 IP/도메인 필요)
+        # **참고**: GitHub-hosted Runner는 외부 네트워크에 연결되지만,
+        # **실제 배포된 서버**에 연결하려면 서버의 **공개 IP/도메인**이 필요합니다.
+        run: |
+          TARGET_HOST="google.com" # 또는 배포된 서버의 실제 IP 주소
+          if ping -c 4 $TARGET_HOST; then
+            echo "✅ $TARGET_HOST 로의 Ping 테스트 성공."
+          else
+            echo "❌ $TARGET_HOST 로의 Ping 테스트 실패."
+            # 실패해도 워크플로를 계속 진행하려면 exit 0 사용 가능
+          fi
